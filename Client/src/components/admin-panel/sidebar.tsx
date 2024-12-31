@@ -24,7 +24,7 @@ export function Sidebar() {
       <div
         onMouseEnter={() => setIsHover(true)}
         onMouseLeave={() => setIsHover(false)}
-        className="relative h-full flex flex-col px-3 py-4 overflow-y-auto shadow-md dark:shadow-zinc-800"
+        className="relative h-full flex flex-col px-3 py-4 overflow-y-auto shadow-md bg-primary-foreground"
       >
         <Button
           className={cn(
@@ -44,7 +44,7 @@ export function Sidebar() {
                   : "translate-x-0 opacity-100"
               )}
             >
-              Brand
+              AASTU Library
             </h1>
           </Link>
         </Button>

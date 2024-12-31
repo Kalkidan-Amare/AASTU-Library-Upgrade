@@ -5,7 +5,13 @@ import {
   Bookmark,
   SquarePen,
   LayoutGrid,
-  LucideIcon
+  LucideIcon,
+  BetweenHorizontalStart,
+  BetweenHorizontalEnd,
+  Library,
+  BookDown,
+  Activity,
+  Clock,
 } from "lucide-react";
 
 type Submenu = {
@@ -36,54 +42,59 @@ export function getMenuList(pathname: string): Group[] {
           href: "/dashboard",
           label: "Dashboard",
           icon: LayoutGrid,
-          submenus: []
-        }
-      ]
+          submenus: [],
+        },
+      ],
     },
     {
-      groupLabel: "Contents",
+      groupLabel: "Students",
       menus: [
         {
-          href: "",
-          label: "Posts",
-          icon: SquarePen,
-          submenus: [
-            {
-              href: "/posts",
-              label: "All Posts"
-            },
-            {
-              href: "/posts/new",
-              label: "New Post"
-            }
-          ]
+          href: "/check-in-student",
+          label: "Check In Student",
+          icon: BetweenHorizontalStart,
         },
         {
-          href: "/categories",
-          label: "Categories",
-          icon: Bookmark
+          href: "/check-out-student",
+          label: "Check Out Student",
+          icon: BetweenHorizontalEnd,
         },
-        {
-          href: "/tags",
-          label: "Tags",
-          icon: Tag
-        }
-      ]
+      ],
     },
     {
-      groupLabel: "Settings",
+      groupLabel: "Books",
       menus: [
         {
-          href: "/users",
-          label: "Users",
-          icon: Users
+          href: "/view-all-books",
+          label: "View All Books",
+          icon: Library,
         },
         {
-          href: "/account",
-          label: "Account",
-          icon: Settings
-        }
-      ]
-    }
+          href: "/borrow-books",
+          label: "Borrow Books",
+          icon: BookDown,
+        },
+      ],
+    },
+    {
+      groupLabel: "Analytics",
+      menus: [
+        {
+          href: "/student-attendance",
+          label: "Student Attendance",
+          icon: Activity,
+        },
+        {
+          href: "/book-read-hours",
+          label: "Book Read Hours",
+          icon: Clock,
+        },
+        {
+          href: "/borrow-frequency",
+          label: "Borrow Frequency",
+          icon: Activity,
+        },
+      ],
+    },
   ];
 }

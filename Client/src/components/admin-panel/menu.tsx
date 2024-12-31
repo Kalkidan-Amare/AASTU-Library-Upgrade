@@ -13,7 +13,7 @@ import {
   Tooltip,
   TooltipTrigger,
   TooltipContent,
-  TooltipProvider
+  TooltipProvider,
 } from "@/components/ui/tooltip";
 
 interface MenuProps {
@@ -122,17 +122,19 @@ export function Menu({ isOpen }: MenuProps) {
                     variant="outline"
                     className="w-full justify-center h-10 mt-5"
                   >
-                    <span className={cn(isOpen === false ? "" : "mr-4")}>
-                      <LogOut size={18} />
-                    </span>
-                    <p
-                      className={cn(
-                        "whitespace-nowrap",
-                        isOpen === false ? "opacity-0 hidden" : "opacity-100"
-                      )}
-                    >
-                      Sign out
-                    </p>
+                    <Link href="/" className="justify-center flex">
+                      <span className={cn(isOpen === false ? "" : "mr-4")}>
+                        <LogOut size={18} />
+                      </span>
+                      <p
+                        className={cn(
+                          "whitespace-nowrap",
+                          isOpen === false ? "opacity-0 hidden" : "opacity-100"
+                        )}
+                      >
+                        Sign out
+                      </p>
+                    </Link>
                   </Button>
                 </TooltipTrigger>
                 {isOpen === false && (
