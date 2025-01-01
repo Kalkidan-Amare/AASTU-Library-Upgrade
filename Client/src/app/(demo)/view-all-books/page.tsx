@@ -10,6 +10,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator
 } from "@/components/ui/breadcrumb";
+import { ViewAllBooks } from "@/components/books_page/ViewallBooks";
 
 export default function ViewAllBooksPage() {
   return (
@@ -33,7 +34,8 @@ export default function ViewAllBooksPage() {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <PlaceholderContent />
+      {/* <PlaceholderContent /> */}
+      <ViewAllBooks/>
     </ContentLayout>
   );
 }
