@@ -10,6 +10,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator
 } from "@/components/ui/breadcrumb";
+import CheckOutComponent from "@/components/check-in/check-out-component";
 
 export default function CheckOutPage() {
   return (
@@ -33,7 +34,7 @@ export default function CheckOutPage() {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <PlaceholderContent />
+      <CheckOutComponent/>
     </ContentLayout>
   );
 }
