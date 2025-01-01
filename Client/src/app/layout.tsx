@@ -17,25 +17,25 @@ export const metadata: Metadata = {
   description:
     "Streamline library operations with a comprehensive system for managing students, books, and insightful analytics, offering seamless book checkouts, returns, borrowing records, and data-driven insights for enhanced library efficiency.",
   alternates: {
-    canonical: "/"
+    canonical: "/",
   },
   openGraph: {
     url: "/",
     title: "AASTU Library",
     description:
       "Streamline library operations with a comprehensive system for managing students, books, and insightful analytics, offering seamless book checkouts, returns, borrowing records, and data-driven insights for enhanced library efficiency.",
-    type: "website"
+    type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "AASTU Library",
     description:
-      "Streamline library operations with a comprehensive system for managing students, books, and insightful analytics, offering seamless book checkouts, returns, borrowing records, and data-driven insights for enhanced library efficiency."
-  }
+      "Streamline library operations with a comprehensive system for managing students, books, and insightful analytics, offering seamless book checkouts, returns, borrowing records, and data-driven insights for enhanced library efficiency.",
+  },
 };
 
 export default function RootLayout({
-  children
+  children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {

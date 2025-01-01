@@ -8,7 +8,7 @@ import {
   SheetHeader,
   SheetContent,
   SheetTrigger,
-  SheetTitle
+  SheetTitle,
 } from "@/components/ui/sheet";
 
 export function SheetMenu() {
@@ -22,13 +22,15 @@ export function SheetMenu() {
       <SheetContent className="sm:w-72 px-3 h-full flex flex-col" side="left">
         <SheetHeader>
           <Button
-            className="flex justify-center items-center pb-2 pt-1"
+            className="flex items-center pb-2 pt-1"
             variant="link"
             asChild
           >
-            <Link href="/dashboard" className="flex items-center gap-2">
+            <Link href="/dashboard" className="flex pl-4 gap-2">
               <PanelsTopLeft className="w-6 h-6 mr-1" />
-              <SheetTitle className="font-bold text-lg">AASTU Library</SheetTitle>
+              <SheetTitle className="font-bold text-lg text-primary-foreground">
+                AASTU Library
+              </SheetTitle>
             </Link>
           </Button>
         </SheetHeader>

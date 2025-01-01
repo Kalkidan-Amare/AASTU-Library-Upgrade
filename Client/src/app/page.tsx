@@ -33,7 +33,7 @@ export default function HomePage() {
             <div className="max-w-[85rem] mx-auto px-4 sm:px-6 lg:px-8 py-10">
               <div className="max-w-2xl text-center mx-auto">
                 <h1 className="block text-3xl font-bold sm:text-4xl md:text-5xl">
-                  Simplify Library Management with {" "}
+                  Simplify Library Management with{" "}
                   <span className="text-primary">Ease</span>
                 </h1>
                 <p className="mt-3 text-lg">

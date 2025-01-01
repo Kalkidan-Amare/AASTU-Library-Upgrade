@@ -10,6 +10,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator
 } from "@/components/ui/breadcrumb";
+import CheckInComponent from "@/components/check-in/check-in-component";
 
 export default function CheckInStudentPage() {
   return (
@@ -33,7 +34,7 @@ export default function CheckInStudentPage() {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <PlaceholderContent />
+      <CheckInComponent/>
     </ContentLayout>
   );
 }

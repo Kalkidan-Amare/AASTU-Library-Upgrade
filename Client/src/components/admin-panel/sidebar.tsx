@@ -28,13 +28,13 @@ export function Sidebar() {
       >
         <Button
           className={cn(
-            "transition-transform ease-in-out duration-300 mb-1",
+            "transition-transform ease-in-out duration-300 mb-1 justify-start",
             !getOpenState() ? "translate-x-1" : "translate-x-0"
           )}
           variant="link"
           asChild
         >
-          <Link href="/dashboard" className="flex items-center gap-2">
+          <Link href="/dashboard" className="flex justify-start items-center gap-2 text-card-foreground" >
             <PanelsTopLeft className="w-6 h-6 mr-1" />
             <h1
               className={cn(
