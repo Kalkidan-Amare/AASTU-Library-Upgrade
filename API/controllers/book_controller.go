@@ -69,7 +69,7 @@ func UpdateBook(c *gin.Context) {
 	// user,_ := c.Get("user")
 	// claims := user.(*middleware.Claims)
 	
-	book, err := data.GetBookByID(id)
+	_, err = data.GetBookByID(id)
     if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
         return
@@ -78,7 +78,7 @@ func UpdateBook(c *gin.Context) {
     
     updatedbook.ID = id
 
-    book, err = data.UpdateBook(id,updatedbook)
+    book, err := data.UpdateBook(id,updatedbook)
     if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
         return
