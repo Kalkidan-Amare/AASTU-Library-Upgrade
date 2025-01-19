@@ -8,9 +8,17 @@ import {
   BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
-  BreadcrumbSeparator
+  BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { ViewAllBooks } from "@/components/books_page/ViewallBooks";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 export default function ViewAllBooksPage() {
   return (
@@ -35,7 +43,11 @@ export default function ViewAllBooksPage() {
         </BreadcrumbList>
       </Breadcrumb>
       {/* <PlaceholderContent /> */}
-      <ViewAllBooks/>
+      <Card className="mt-4">
+        <CardHeader>
+          <ViewAllBooks />
+        </CardHeader>
+      </Card>
     </ContentLayout>
   );
 }
