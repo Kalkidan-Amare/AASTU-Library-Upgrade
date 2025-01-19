@@ -13,7 +13,7 @@ import (
 var checkinCollection *mongo.Collection
 
 func SetCheckinCollection(client *mongo.Client) {
-	checkinCollection = client.Database("BookManager").Collection("checkins")
+	checkinCollection = client.Database("BookManager").Collection("CheckIns")
 }
 
 func CreateCheckInRecord(checkIn models.CheckIn) error {
@@ -24,7 +24,7 @@ func CreateCheckInRecord(checkIn models.CheckIn) error {
 
 func GetCheckInRecord(studentID string) (models.CheckIn, error) {
 	var checkIn models.CheckIn
-	err := checkinCollection.FindOne(context.Background(), bson.M{"student_id": studentID}).Decode(&checkIn)
+	err := checkinCollection.FindOne(context.Background(), bson.M{"studentid": studentID}).Decode(&checkIn)
 
 	return checkIn, err
 }
@@ -33,7 +33,7 @@ func UpdateCheckOutTime(checkIn models.CheckIn) error {
 	_, err := checkinCollection.UpdateOne(
 		context.Background(),
 		bson.M{"_id": checkIn.ID},
-		bson.M{"$set": bson.M{"checkout_at": checkIn.CheckOutAt}},
+		bson.M{"$set": bson.M{"checkoutat": time.Now()}},
 	)
 
 	return err
@@ -71,25 +71,13 @@ func GetStudentCheckInsInInterval(startTime, endTime time.Time) ([]models.CheckI
 	return checkIns, nil
 }
 
-func GetUserCheckIns(studentID, username string, startDate, endDate time.Time) ([]models.CheckIn, error) {
+func GetUserCheckIns(studentID string, startDate time.Time, endDate time.Time) ([]models.CheckIn, error) {
 	var checkIns []models.CheckIn
 
-	// ToDo should either be by username or studentID not both
+	// Filter to find check-ins for the given student within the specified date range
 	filter := bson.M{
-		"$and": []bson.M{
-			{
-				"$or": []bson.M{
-					{"student_id": studentID},
-					{"username": username},
-				},
-			},
-			{
-				"$or": []bson.M{
-					{"checkin_at": bson.M{"$gte": startDate, "$lte": endDate}},
-					{"checkout_at": bson.M{"$gte": startDate, "$lte": endDate}},
-				},
-			},
-		},
+		"studentid": studentID,
+		"checkin_at": bson.M{"$gte": startDate, "$lte": endDate},
 	}
 
 	cursor, err := checkinCollection.Find(context.Background(), filter)

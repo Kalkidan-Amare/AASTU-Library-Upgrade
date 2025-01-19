@@ -20,9 +20,9 @@ func CheckIn(c *gin.Context) {
 		return
 	}
 
-	user, err := data.GetUserByID(req.StudentId)
+	user, err := data.GetUserByStudentID(req.StudentId)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user", "message": err.Error()})
 		return
 	}
 
@@ -52,7 +52,7 @@ func CheckOut(c *gin.Context) {
 		return
 	}
 
-	user, err := data.GetUserByID(req.StudentId)
+	user, err := data.GetUserByStudentID(req.StudentId)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user"})
 		return
@@ -72,8 +72,8 @@ func CheckOut(c *gin.Context) {
 	}
 
 	// Update the check-out time
-	now := time.Now()
-	checkIn.CheckOutAt = &now
+	// now := time.Now()
+	// checkIn.CheckOutAt = now
 	if err := data.UpdateCheckOutTime(checkIn); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to record check-out"})
 		return
@@ -105,10 +105,11 @@ func AnalyzeLibraryTraffic(c *gin.Context) {
 
 func GetUserCheckIns(c *gin.Context) {
 	var req struct {
-		StudentID string    `json:"student_id"`  // ToDo one is enough
-		Username  string    `json:"username"`
-		StartDate time.Time `json:"start_date"`
-		EndDate   time.Time `json:"end_date"`
+		StudentID   string `json:"student_id"` // ToDo one is enough
+		StartDate   string `json:"start_date"`
+		StartTime   string `json:"start_time"`
+		EndDate     string `json:"end_date"`
+		EndTime     string `json:"end_time"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -116,7 +117,19 @@ func GetUserCheckIns(c *gin.Context) {
 		return
 	}
 
-	checkIns, err := data.GetUserCheckIns(req.StudentID, req.Username, req.StartDate, req.EndDate)
+	startDateTime, err := time.Parse(time.RFC3339, req.StartDate+"T"+req.StartTime+":00Z")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid start date or time format"})
+		return
+	}
+
+	endDateTime, err := time.Parse(time.RFC3339, req.EndDate+"T"+req.EndTime+":00Z")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid end date or time format"})
+		return
+	}
+
+	checkIns, err := data.GetUserCheckIns(req.StudentID, startDateTime, endDateTime)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve check-ins"})
 		return
