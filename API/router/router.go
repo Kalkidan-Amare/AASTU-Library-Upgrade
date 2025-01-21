@@ -11,13 +11,14 @@ func SetupBookRouter(r *gin.Engine) {
 	authorized := r.Group("/books")
 	authorized.Use(middleware.AuthMiddleware())
 	{
+
 		// Book routes for all users
 		authorized.GET("/", controllers.GetBooks)
 		authorized.GET("/:id", controllers.GetBook)
 
 		// Borrowing logic
 		authorized.POST("/borrow", controllers.BorrowBook)
-		authorized.PUT("/return/:id", controllers.ReturnBook)
+		authorized.POST("/return", controllers.ReturnBook)
 
 		// Borrowing analysis routes
 		authorized.POST("/read-books", controllers.GetReadBooksBetweenDates)
@@ -36,14 +37,18 @@ func SetupBookRouter(r *gin.Engine) {
 }
 
 func SetupUserRouter(r *gin.Engine) {
+
+	//ToDo if necessary CRUD operations on users
 	user := r.Group("/users")
 	{
 		user.POST("/register", controllers.RegisterStudent)
 		user.POST("/register-admin", controllers.RegisterAdmin)
 		user.POST("/login-admin", controllers.LoginAdmin)
+		user.POST("/authenticate", controllers.AuthenticateUser)
+
+		//ToDo logout
 	}
 
-	//ToDo Authenticating the students to borrow books
 }
 
 func SetupCheckInRouter(r *gin.Engine) {
@@ -52,7 +57,7 @@ func SetupCheckInRouter(r *gin.Engine) {
 	{
 		checkin.POST("/", controllers.CheckIn)
 		checkin.POST("/checkout", controllers.CheckOut)
-		checkin.POST("/analyze", controllers.AnalyzeLibraryTraffic)
+		// checkin.POST("/analyze", controllers.AnalyzeLibraryTraffic)
 		checkin.POST("/user-checkins", controllers.GetUserCheckIns)
 		checkin.POST("/interval-checkins", controllers.GetStudentCheckInsInInterval)
 	}

@@ -10,14 +10,14 @@ import (
 )
 
 func RegisterStudent(c *gin.Context){
-	var user models.User
-	if err := c.ShouldBindJSON(&user); err != nil{
+	var admin models.User
+	if err := c.ShouldBindJSON(&admin); err != nil{
 		c.JSON(http.StatusBadRequest, gin.H{"error":err.Error()})
 		return
 	}
-	user.Role = "user"
+	admin.Role = "admin"
 
-	newUser,err := data.RegisterUser(user)
+	newUser,err := data.RegisterUser(admin)
 	if err != nil{
 		c.JSON(http.StatusInternalServerError, gin.H{"error":err.Error()})
 		return
@@ -26,14 +26,14 @@ func RegisterStudent(c *gin.Context){
 }	
 
 func RegisterAdmin(c *gin.Context){
-	var user models.User
-	if err := c.ShouldBindJSON(&user); err != nil{
+	var admin models.User
+	if err := c.ShouldBindJSON(&admin); err != nil{
 		c.JSON(http.StatusBadRequest, gin.H{"error":err.Error()})
 		return
 	}
-	user.Role = "admin"
+	admin.Role = "admin"
 
-	newUser,err := data.RegisterUser(user)
+	newUser,err := data.RegisterUser(admin)
 	if err != nil{
 		c.JSON(http.StatusInternalServerError, gin.H{"error":err.Error()})
 		return
@@ -44,13 +44,13 @@ func RegisterAdmin(c *gin.Context){
 
 func LoginAdmin(c *gin.Context){
 	// 
-	var user models.User
-	if err := c.ShouldBindJSON(&user); err != nil{
+	var admin models.LoginAdmin
+	if err := c.ShouldBindJSON(&admin); err != nil{
 		c.JSON(http.StatusBadRequest, gin.H{"error":err.Error()})
 		return
 	}
 
-	existingUser,err := data.AuthenticateUser(user)
+	existingUser,err := data.AuthenticateUser(admin)
 	if err != nil{
 		c.JSON(http.StatusUnauthorized, gin.H{"error":err.Error()})
 		return
@@ -67,13 +67,14 @@ func LoginAdmin(c *gin.Context){
 
 
 func AuthenticateUser(c *gin.Context){
-	var user models.User
-	if err := c.ShouldBindJSON(&user); err != nil{
+	var student models.CheckStudent
+	if err := c.ShouldBindJSON(&student); err != nil{
 		c.JSON(http.StatusBadRequest, gin.H{"error":err.Error()})
 		return
 	}
 
-	existingUser,err := data.AuthenticateUser(user)
+	
+	existingUser,err := data.GetUserByStudentID(student.StudentId)
 	if err != nil{
 		c.JSON(http.StatusUnauthorized, gin.H{"error":err.Error()})
 		return

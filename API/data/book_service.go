@@ -15,7 +15,7 @@ var bookCollection *mongo.Collection
 
 
 func SetBookCollection(client *mongo.Client){
-	bookCollection = client.Database("bookManager").Collection("books")
+	bookCollection = client.Database("BookManager").Collection("Books")
 }
 
 func GetAllBooks() ([]models.Book,error) {
@@ -51,7 +51,7 @@ func CreateBook(book models.Book) (interface{}, error) {
 		return models.Book{},err
 	}
 
-	return insert.InsertedID,nil
+	return insert,nil
 }
 
 func UpdateBook(id primitive.ObjectID, updatedbook models.Book) (models.Book, error) {
@@ -74,6 +74,21 @@ func DeleteBook(id primitive.ObjectID) error{
 	_,err := bookCollection.DeleteOne(context.TODO(),bson.D{{Key: "_id", Value: id}})
 	if err != nil{
 		return err
+	}
+
+	return nil
+}
+
+func ReturnBook(bookID primitive.ObjectID) error {
+	filter := bson.M{"_id": bookID}
+	update := bson.M{"$set": bson.M{"isavailable": true}}
+
+	result, err := bookCollection.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		return err
+	}
+	if result.MatchedCount == 0 {
+		return errors.New("no book found with the given ID")
 	}
 
 	return nil
