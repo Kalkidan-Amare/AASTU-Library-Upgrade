@@ -32,6 +32,16 @@ func GetUserByID(id string) (models.User, error) {
 	return user, nil
 }
 
+func GetUserByStudentID(studentID string) (models.User, error) {
+	var user models.User
+	err := userCollection.FindOne(context.Background(), bson.M{"student_id": studentID}).Decode(&user)
+	if err != nil {
+		return models.User{}, err
+	}
+
+	return user, nil
+}
+
 func RegisterUser(user models.User) (models.User, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
@@ -47,9 +57,9 @@ func RegisterUser(user models.User) (models.User, error) {
 	return user, nil
 }
 
-func AuthenticateUser(newUser models.User) (models.User, error) {
+func AuthenticateUser(newUser models.LoginAdmin) (models.User, error) {
 	var user models.User
-	err := userCollection.FindOne(context.Background(),bson.M{"username": newUser.Username}).Decode(&user)
+	err := userCollection.FindOne(context.Background(),bson.M{"email": newUser.Email}).Decode(&user)
 	if err != nil {
 		return models.User{}, err
 	}
