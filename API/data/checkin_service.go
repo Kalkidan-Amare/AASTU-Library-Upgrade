@@ -2,6 +2,7 @@ package data
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"aastu_lib/models"
@@ -10,7 +11,18 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-var checkinCollection *mongo.Collection
+var (
+	checkinCollection *mongo.Collection
+	location          *time.Location
+)
+
+func init() {
+	var err error
+	location, err = time.LoadLocation("Africa/Addis_Ababa")
+	if err != nil {
+		panic(err) // ToDo Handle this appropriately
+	}
+}
 
 func SetCheckinCollection(client *mongo.Client) {
 	checkinCollection = client.Database("BookManager").Collection("CheckIns")
@@ -29,28 +41,37 @@ func GetCheckInRecord(studentID string) (models.CheckIn, error) {
 	return checkIn, err
 }
 
-func UpdateCheckOutTime(checkIn models.CheckIn) error {
+func UpdateCheckOutTime(checkIn models.CheckIn, checkoutTime string) error {
 	_, err := checkinCollection.UpdateOne(
 		context.Background(),
 		bson.M{"_id": checkIn.ID},
-		bson.M{"$set": bson.M{"checkoutat": time.Now()}},
+		bson.M{"$set": bson.M{"checkout_at": checkoutTime}},
 	)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Check-out time updated: %+v\n", checkIn)
+	fmt.Println(checkoutTime)
 
-	return err
+	return nil
 }
 
-func GetStudentCheckInsInInterval(startTime, endTime time.Time) ([]models.CheckIn, error) {
+func GetStudentCheckInsInInterval(startTimeStr, endTimeStr string) ([]models.CheckIn, error) {
 	var checkIns []models.CheckIn
 
-	// Query to find students in the given time interval
-	filter := bson.M{
-		"$or": []bson.M{
-			{"checkin_at": bson.M{"$lte": endTime, "$gte": startTime}},
-			{"checkout_at": bson.M{"$lte": endTime, "$gte": startTime}},
-		},
+	// Parse the input start and end time strings into time.Time
+	startTime, err := time.Parse("2006-01-02 15:04", startTimeStr)
+	if err != nil {
+		return nil, fmt.Errorf("invalid start time format: %v", err)
 	}
 
-	cursor, err := checkinCollection.Find(context.Background(), filter)
+	endTime, err := time.Parse("2006-01-02 15:04", endTimeStr)
+	if err != nil {
+		return nil, fmt.Errorf("invalid end time format: %v", err)
+	}
+
+	// Fetch all check-ins
+	cursor, err := checkinCollection.Find(context.Background(), bson.M{})
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +82,30 @@ func GetStudentCheckInsInInterval(startTime, endTime time.Time) ([]models.CheckI
 		if err := cursor.Decode(&checkIn); err != nil {
 			return nil, err
 		}
-		checkIns = append(checkIns, checkIn)
+
+		// Parse `checkin_at` and `checkout_at` strings into time.Time
+		var checkInTime, checkOutTime time.Time
+		if checkIn.CheckInAt != "" {
+			checkInTime, err = time.Parse("2006-01-02 15:04", checkIn.CheckInAt)
+			if err != nil {
+				// Skip invalid date formats
+				continue
+			}
+		}
+
+		if checkIn.CheckOutAt != "" {
+			checkOutTime, err = time.Parse("2006-01-02 15:04", checkIn.CheckOutAt)
+			if err != nil {
+				// Skip invalid date formats
+				continue
+			}
+		}
+
+		// Check if either `checkin_at` or `checkout_at` falls within the interval
+		if (checkInTime.After(startTime) && checkInTime.Before(endTime)) || 
+		   (checkOutTime.After(startTime) && checkOutTime.Before(endTime)) {
+			checkIns = append(checkIns, checkIn)
+		}
 	}
 
 	if err := cursor.Err(); err != nil {
@@ -71,27 +115,49 @@ func GetStudentCheckInsInInterval(startTime, endTime time.Time) ([]models.CheckI
 	return checkIns, nil
 }
 
-func GetUserCheckIns(studentID string, startDate time.Time, endDate time.Time) ([]models.CheckIn, error) {
+
+func GetUserCheckIns(studentID, startDate, endDate string) ([]models.CheckIn, error) {
 	var checkIns []models.CheckIn
 
-	// Filter to find check-ins for the given student within the specified date range
-	filter := bson.M{
-		"studentid": studentID,
-		"checkin_at": bson.M{"$gte": startDate, "$lte": endDate},
-	}
+	// Filter to find check-ins for the given student
+	filter := bson.M{"studentid": studentID}
 
+	// Fetch all records if the dates are not in ISO 8601 format
 	cursor, err := checkinCollection.Find(context.Background(), filter)
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(context.Background())
 
+	// Parse the start and end dates
+	startTime, err := time.Parse("2006-01-02 15:04", startDate)
+	if err != nil {
+		return nil, fmt.Errorf("invalid start date format: %v", err)
+	}
+	endTime, err := time.Parse("2006-01-02 15:04", endDate)
+	if err != nil {
+		return nil, fmt.Errorf("invalid end date format: %v", err)
+	}
+
+	// Manually filter the records
 	for cursor.Next(context.Background()) {
 		var checkIn models.CheckIn
 		if err := cursor.Decode(&checkIn); err != nil {
 			return nil, err
 		}
-		checkIns = append(checkIns, checkIn)
+
+		// Parse `checkin_at` as a string into a time.Time object
+		checkInTime, err := time.Parse("2006-01-02 15:04", checkIn.CheckInAt)
+		if err != nil {
+			// Skip invalid dates
+			continue
+		}
+		// fmt.Printf("Check-in time: %v\n", checkInTime)
+
+		// Filter based on the date range
+		if checkInTime.After(startTime) && checkInTime.Before(endTime) {
+			checkIns = append(checkIns, checkIn)
+		}
 	}
 
 	if err := cursor.Err(); err != nil {
@@ -100,3 +166,4 @@ func GetUserCheckIns(studentID string, startDate time.Time, endDate time.Time) (
 
 	return checkIns, nil
 }
+
