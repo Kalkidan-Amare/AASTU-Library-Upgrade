@@ -3,12 +3,12 @@ package controllers
 import (
 	"aastu_lib/data"
 	"aastu_lib/models"
+	// "fmt"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
 )
-
 
 func CheckIn(c *gin.Context) {
 	var req struct {
@@ -26,10 +26,11 @@ func CheckIn(c *gin.Context) {
 		return
 	}
 
+	location, _ := time.LoadLocation("Africa/Addis_Ababa")
 	checkIn := models.CheckIn{
 		StudentID: req.StudentId,
 		UserID:    user.ID.Hex(),
-		CheckInAt: time.Now(),
+		CheckInAt: time.Now().In(location).Format("2006-01-02 15:04"),
 	}
 
 	if err := data.CreateCheckInRecord(checkIn); err != nil {
@@ -40,8 +41,6 @@ func CheckIn(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Check-in successful", "data": checkIn, "user": user})
 }
 
-
-// ToDO clearing all the checkin once a day, to guarantee 
 func CheckOut(c *gin.Context) {
 	var req struct {
 		StudentId string `json:"student_id"`
@@ -58,58 +57,62 @@ func CheckOut(c *gin.Context) {
 		return
 	}
 
-	// Check if the student is already checked in
 	checkIn, err := data.GetCheckInRecord(req.StudentId)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Check-in record not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "Check-in record not found", "message": err.Error()})
 		return
 	}
 
-	// Check if the student has returned all the borrowed books
 	if len(user.BorrowedBooks) > 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Student has not returned all borrowed books", "borrowed_books": user.BorrowedBooks})
 		return
 	}
 
-	// Update the check-out time
-	// now := time.Now()
-	// checkIn.CheckOutAt = now
-	if err := data.UpdateCheckOutTime(checkIn); err != nil {
+	location, _ := time.LoadLocation("Africa/Addis_Ababa")
+	checkOutTime := time.Now().In(location).Format("2006-01-02 15:04")
+	if err := data.UpdateCheckOutTime(checkIn, checkOutTime); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to record check-out"})
 		return
 	}
 
+	// fmt.Printf("Check-out time: %s\n", checkOutTime)
+
 	c.JSON(http.StatusOK, gin.H{"message": "Check-out successful", "data": checkIn, "user": user})
 }
 
-func AnalyzeLibraryTraffic(c *gin.Context) {
-	var req struct {
-		StartTime time.Time `json:"start_time"`
-		EndTime   time.Time `json:"end_time"`
-	}
+// func AnalyzeLibraryTraffic(c *gin.Context) {
+// 	var req struct {
+// 		StartDate string `json:"start_date"`
+// 		StartTime string `json:"start_time"`
+// 		EndDate   string `json:"end_date"`
+// 		EndTime   string `json:"end_time"`
+// 	}
 
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
-		return
-	}
+// 	if err := c.ShouldBindJSON(&req); err != nil {
+// 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+// 		return
+// 	}
 
-	count, err := data.GetStudentCheckInsInInterval(req.StartTime, req.EndTime)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to analyze library traffic"})
-		return
-	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Library traffic analysis", "count": count})
-}
+// 	startDateTime := req.StartDate + " " + req.StartTime
+// 	endDateTime := req.EndDate + " " + req.EndTime
 
+// 	count, err := data.GetStudentCheckInsInInterval(startDateTime, endDateTime)
+// 	if err != nil {
+// 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to analyze library traffic"})
+// 		return
+// 	}
+
+// 	c.JSON(http.StatusOK, gin.H{"message": "Library traffic analysis", "count": count})
+// }
 
 func GetUserCheckIns(c *gin.Context) {
 	var req struct {
-		StudentID   string `json:"student_id"` // ToDo one is enough
-		StartDate   string `json:"start_date"`
-		StartTime   string `json:"start_time"`
-		EndDate     string `json:"end_date"`
-		EndTime     string `json:"end_time"`
+		StudentID string `json:"student_id"`
+		StartDate string `json:"start_date"`
+		StartTime string `json:"start_time"`
+		EndDate   string `json:"end_date"`
+		EndTime   string `json:"end_time"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -117,17 +120,10 @@ func GetUserCheckIns(c *gin.Context) {
 		return
 	}
 
-	startDateTime, err := time.Parse(time.RFC3339, req.StartDate+"T"+req.StartTime+":00Z")
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid start date or time format"})
-		return
-	}
+	
+	startDateTime := req.StartDate + " " + req.StartTime
+	endDateTime := req.EndDate + " " + req.EndTime
 
-	endDateTime, err := time.Parse(time.RFC3339, req.EndDate+"T"+req.EndTime+":00Z")
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid end date or time format"})
-		return
-	}
 
 	checkIns, err := data.GetUserCheckIns(req.StudentID, startDateTime, endDateTime)
 	if err != nil {
@@ -138,11 +134,12 @@ func GetUserCheckIns(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "User check-ins retrieved successfully", "data": checkIns})
 }
 
-
 func GetStudentCheckInsInInterval(c *gin.Context) {
 	var req struct {
-		StartTime time.Time `json:"start_time"`
-		EndTime   time.Time `json:"end_time"`
+		StartDate string `json:"start_date"`
+		StartTime string `json:"start_time"`
+		EndDate   string `json:"end_date"`
+		EndTime   string `json:"end_time"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -150,7 +147,10 @@ func GetStudentCheckInsInInterval(c *gin.Context) {
 		return
 	}
 
-	checkIns, err := data.GetStudentCheckInsInInterval(req.StartTime, req.EndTime)
+	startDateTime := req.StartDate + " " + req.StartTime
+	endDateTime := req.EndDate + " " + req.EndTime
+
+	checkIns, err := data.GetStudentCheckInsInInterval(startDateTime, endDateTime)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve check-ins"})
 		return
