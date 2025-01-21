@@ -3,20 +3,23 @@ package config
 import (
 	"context"
 	"log"
-	"os"
+	// "os"
 	// "fmt"
 
-	"github.com/joho/godotenv"
+	// "github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func Init()(*mongo.Client, error) {
-	if err := godotenv.Load(); err != nil {
-		return nil, err
-	}
+	// if err := godotenv.Load(); err != nil {
+	// 	return nil, err
+	// }
 
-	mongoURI := os.Getenv("MONGO_URI")
+	mongoURI :="mongodb+srv://kalkidanamare11a:123456Ka@cluster0.d2j0zkv.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+
+
+	// mongoURI := os.Getenv("MONGO_URI")
 	if mongoURI == "" {
 		log.Fatal("MONGODB_URI is not set in .env file")
 	}
