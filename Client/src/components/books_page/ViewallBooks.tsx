@@ -20,6 +20,7 @@ import {
   Loader,
   Pencil,
   Trash2,
+  ListMinus,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -51,6 +52,7 @@ import { addBookAction, getBooksAction } from "@/lib/actions";
 import UpdateBookDialog from "./update-book";
 import DeleteBookDialogue from "./delete-book";
 import { Textarea } from "../ui/textarea";
+import BookDialogue from "./book_dialogue";
 
 // Define the Book type
 export type Book = {
@@ -404,6 +406,12 @@ export function ViewAllBooks() {
                       )}
                     </TableCell>
                   ))}
+                  <TableCell>
+                  <BookDialogue bookId={row.original.id}>
+                  <ListMinus className="cursor-pointer"/>
+                  </BookDialogue>
+
+                  </TableCell>
                   <DeleteBookDialogue
                     onDeleteBook={() => refetch()}
                     bookId={row.original.id}

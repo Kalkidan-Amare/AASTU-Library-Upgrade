@@ -8,9 +8,10 @@ import {
   BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
-  BreadcrumbSeparator
+  BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import IntervalCheckins from "@/components/analytics/interval-checkins";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function StudentsAttendancePage() {
   return (
@@ -34,7 +35,11 @@ export default function StudentsAttendancePage() {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <IntervalCheckins />
+      <Card className="mt-4">
+        <CardContent className="pt-4">
+          <IntervalCheckins />
+        </CardContent>
+      </Card>
     </ContentLayout>
   );
 }
