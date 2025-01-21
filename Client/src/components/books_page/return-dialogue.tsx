@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/card";
 import { useMutation } from "@tanstack/react-query";
 import { getBookByIdAction, returnBooksAction } from "@/lib/actions";
+import { toast, useToast } from "@/hooks/use-toast"
 
 // Define the Book type
 export type Book = {
@@ -105,11 +106,19 @@ const ReturnDialogue = ({
       setBorrowError(null);
       setBorrowedBookIds([]);
       setBooks([]);
+      toast({
+        variant: "success",
+        title: "Books returned successfully",
+      })
       setIsOpen(false);
     },
     onError: (error) => {
       if (error instanceof Error) {
         setBorrowError(error.message);
+        toast({
+          variant: "destructive",
+          title: error.message,
+        })
       } else {
         setBorrowError("An error occurred while borrowing books");
       }
