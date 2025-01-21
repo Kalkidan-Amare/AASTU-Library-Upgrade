@@ -117,3 +117,41 @@ export async function intervalCheckInsAction(
     );
   }
 }
+
+export async function notReadBooksAction(
+  token: string,
+  startDate: string,
+  startTime: string,
+  endDate: string,
+  endTime: string
+) {
+  try {
+    const response = await fetch(
+      process.env.BACKEND_URL + `/books/not-read-books`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          start_date: startDate,
+          start_time: startTime,
+          end_date: endDate,
+          end_time: endTime,
+        }),
+      }
+    );
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to fetch not read books");
+    }
+    return data;
+  } catch (error: any) {
+    console.error("Error during not read books fetch:", error);
+    throw new Error(
+      error.message || "An error occurred during not read books fetch"
+    );
+  }
+}

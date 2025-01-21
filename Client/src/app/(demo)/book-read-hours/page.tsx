@@ -10,6 +10,8 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator
 } from "@/components/ui/breadcrumb";
+import NotReadBooksTable from "@/components/analytics/not-read-books-table";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function BookReadHoursPage() {
   return (
@@ -33,7 +35,12 @@ export default function BookReadHoursPage() {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <PlaceholderContent />
+      <Card className="mt-4">
+        <CardContent className="pt-4">
+
+      <NotReadBooksTable />
+        </CardContent>
+      </Card>
     </ContentLayout>
   );
 }
