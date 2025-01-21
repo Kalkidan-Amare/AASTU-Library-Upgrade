@@ -25,6 +25,7 @@ import {
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { borrowBooksAction, getBookByIdAction } from "@/lib/actions";
 import Barcode from "react-barcode";
+import HistoryDialogue from "./history_dialogue";
 
 // Define the Book type
 export type Book = {
@@ -170,8 +171,11 @@ const BookDialogue = ({
                 <Download className="mr-4"/> Download Barcode
                 </div>
               </CardContent>
-              <CardFooter>
+              <CardFooter className="flex justify-between">
                 <Button onClick={() => setIsOpen(false)}>Close</Button>
+                <HistoryDialogue bookId={bookId}>
+                  <Button>View History</Button>
+                </HistoryDialogue>
               </CardFooter>
             </Card>
           )}

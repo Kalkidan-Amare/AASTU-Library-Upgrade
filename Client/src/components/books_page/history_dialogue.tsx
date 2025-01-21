@@ -1,6 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import * as React from "react";
 import {
   ColumnDef,
   flexRender,
@@ -20,6 +28,7 @@ import {
   Loader,
   Pencil,
   Trash2,
+  ListMinus,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -47,21 +56,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { addBookAction, getBooksAction } from "@/lib/actions";
-import { Textarea } from "../ui/textarea";
-import { readBooksAction } from "@/lib/student-actions";
+import UpdateBookDialog from "./update-book";
+import DeleteBookDialogue from "./delete-book";
+import BookDialogue from "./book_dialogue";
+import { bookHistoryAction } from "@/lib/student-actions";
 
-// Define the Book type
-export type ReadBook = {
-  book: {
-    id: string;
-    title: string;
-    description: string;
-    bar_code: string;
-    status: boolean;
-    shelf_no: string;
-    author: string;
-  };
+export type BookHistory = {
   borrow: {
     id: string;
     borrow_time: string;
@@ -72,87 +72,54 @@ export type ReadBook = {
   student_id: string;
 };
 
-type IntervalCheckinsResult = ReadBook[] | null;
+const token = localStorage.getItem("token");
 
 // Initial sample data
-const initialRecord: ReadBook[] = [];
+const initialBooks: BookHistory[] = [];
 
 // Define the table columns
-const columns: ColumnDef<ReadBook>[] = [
-  {
-    accessorKey: "title",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
-        Title <ArrowUpDown className="ml-2 h-4 w-4" />
-      </Button>
-    ),
-    cell: ({ row }) => (
-      <div className="font-medium">{row.original.book.title}</div>
-    ),
-  },
-  {
-    accessorKey: "author",
-    header: "Author",
-    cell: ({ row }) => <div>{row.original.book.author}</div>,
-  },
-  {
-    accessorKey: "borrow_time",
-    header: "Borrow Time",
-    cell: ({ row }) => <div>{row.original.borrow.borrow_time}</div>,
-  },
+const columns: ColumnDef<BookHistory>[] = [
   {
     accessorKey: "student_id",
     header: "Student ID",
-    cell: ({ row }) => <div>{row.getValue('student_id')}</div>,
+    cell: ({ row }) => <div>{row.getValue("student_id")}</div>,
   },
 ];
 
-const token = localStorage.getItem("token");
-
-export default function ReadBooksTable() {
-  const [startDate, setStartDate] = useState("");
-  const [startTime, setStartTime] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [endTime, setEndTime] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
-  const [checkinResult, setCheckinResult] =
-    useState<IntervalCheckinsResult | null>(null);
+const HistoryDialogue = ({
+  children,
+  bookId,
+}: {
+  children: React.ReactNode;
+  bookId: string;
+}) => {
+  const [isOpen, setIsOpen] = React.useState(false);
 
   const {
-    mutate: fetchCheckins,
+    data: bookHistoryData,
     isLoading,
     isError,
     error,
-  } = useMutation({
-    mutationFn: async () => {
-      if (!token) {
-        throw new Error("No auth token provided");
-      }
-      return readBooksAction(token, startDate, startTime, endDate, endTime);
+    isFetched,
+  } = useQuery({
+    queryKey: ["bookHistory"],
+    queryFn: async () => {
+      return bookHistoryAction(token, bookId);
     },
-    onSuccess: (data) => {
-      setCheckinResult(data);
-      console.log(data);
-      setErrorMessage("");
-    },
-    onError: (error) => {
-      setCheckinResult(null);
-      if (error instanceof Error) {
-        setErrorMessage(error.message);
-      }
-    },
+    enabled: !!token,
+    staleTime: 0,
   });
 
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
-  const [rowSelection, setRowSelection] = useState({});
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+    []
+  );
+  const [columnVisibility, setColumnVisibility] =
+    React.useState<VisibilityState>({});
+  const [rowSelection, setRowSelection] = React.useState({});
 
   const table = useReactTable({
-    data: checkinResult ?? initialRecord,
+    data: bookHistoryData ?? initialBooks,
     columns,
     state: {
       sorting,
@@ -170,31 +137,28 @@ export default function ReadBooksTable() {
     getPaginationRowModel: getPaginationRowModel(),
   });
 
-  const handleFetchCheckins = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setCheckinResult(null);
-    fetchCheckins();
-  };
-  const renderResult = (result: IntervalCheckinsResult) => {
-    if (!result) return null;
-    return (
-      <div>
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogContent className="min-w-[50%] min-h-[50%] overflow-auto max-h-screen">
         <div className="w-full p-4">
           {/* Header Section */}
           <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0 py-4">
             {/* Filter Input */}
-            <div className="w-full md:w-auto flex gap-4">
+            <div className="w-full md:w-auto">
               <Input
-                placeholder="Filter record by Student Id..."
+                placeholder="Filter book history by id..."
                 value={
-                  (table.getColumn("student_id")?.getFilterValue() as string) ?? ""
+                  (table.getColumn("student_id")?.getFilterValue() as string) ??
+                  ""
                 }
                 onChange={(event) =>
-                  table.getColumn("student_id")?.setFilterValue(event.target.value)
+                  table
+                    .getColumn("student_id")
+                    ?.setFilterValue(event.target.value)
                 }
                 className="w-full md:w-[300px]"
               />
-              <Label className="text-lg">Total: {result.length}</Label>
             </div>
 
             {/* Columns Dropdown and Add Book Button */}
@@ -229,6 +193,9 @@ export default function ReadBooksTable() {
               <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow key={headerGroup.id}>
+                    <TableHead >
+                        Borrow Time
+                    </TableHead>
                     {headerGroup.headers.map((header) => (
                       <TableHead key={header.id}>
                         {header.isPlaceholder
@@ -246,6 +213,9 @@ export default function ReadBooksTable() {
                 {table.getRowModel().rows?.length ? (
                   table.getRowModel().rows.map((row) => (
                     <TableRow key={row.id}>
+                        <TableCell>
+                            {row.original.borrow.borrow_time}
+                        </TableCell>
                       {row.getVisibleCells().map((cell) => (
                         <TableCell key={cell.id}>
                           {flexRender(
@@ -294,63 +264,9 @@ export default function ReadBooksTable() {
             </Button>
           </div>
         </div>
-      </div>
-    );
-  };
-
-  return (
-    <div>
-      <form onSubmit={handleFetchCheckins} className="flex gap-4">
-        <div className="">
-          <Input
-            type="date"
-            placeholder="Start Date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            className="w-40"
-          />
-          <Label className="h-16">Start Date</Label>
-        </div>
-        <div>
-          <Input
-            type="time"
-            placeholder="Start Time"
-            value={startTime}
-            onChange={(e) => setStartTime(e.target.value)}
-            className="w-40"
-          />
-          <Label className="h-16"> Start Time</Label>
-        </div>
-        <div>
-          <Input
-            type="date"
-            placeholder="End Date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            className="w-40"
-          />
-          <Label className="h-16"> End Date</Label>
-        </div>
-        <div>
-          <Input
-            type="time"
-            placeholder="End Time"
-            value={endTime}
-            onChange={(e) => setEndTime(e.target.value)}
-            className="w-40"
-          />
-          <Label className="h-16"> End Time</Label>
-        </div>
-        <Button type="submit" disabled={isLoading} className="w-40">
-          {isLoading ? (
-            <Loader className="h-4 w-4 animate-spin" />
-          ) : (
-            "Get read books"
-          )}
-        </Button>
-        {isError && <p style={{ color: "red" }}>{errorMessage}</p>}
-      </form>
-      {renderResult(checkinResult)}
-    </div>
+      </DialogContent>
+    </Dialog>
   );
-}
+};
+
+export default HistoryDialogue;

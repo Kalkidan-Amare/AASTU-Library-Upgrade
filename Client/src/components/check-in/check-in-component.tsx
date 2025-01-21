@@ -117,12 +117,12 @@ export default function CheckInComponent() {
               <p className="text-muted-foreground h-6">Status</p>
             </div>
             <div className="flex flex-col gap-4">
-              <p className="text-lg font-bold h-6"></p>
+              <p className="text-lg font-bold h-6">Kalkidan Amare</p>
               <p className="h-6">{user.student_id}</p>
-              <p className="h-6"></p>
-              <p className="h-6"></p>
-              <p className="h-6"></p>
-              <p className="h-6"></p>
+              <p className="h-6">Male</p>
+              <p className="h-6">Software Engineering</p>
+              <p className="h-6">2014</p>
+              <p className="h-6">Active</p>
             </div>
           </div>
           <CardFooter className="flex justify-end items-end">

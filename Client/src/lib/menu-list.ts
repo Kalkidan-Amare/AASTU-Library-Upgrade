@@ -86,7 +86,7 @@ export function getMenuList(pathname: string): Group[] {
         },
         {
           href: "/book-read-hours",
-          label: "Book Read Hours",
+          label: "Not Read Books",
           icon: Clock,
         },
         {

@@ -10,6 +10,8 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator
 } from "@/components/ui/breadcrumb";
+import { Card, CardContent } from "@/components/ui/card";
+import ReadBooksTable from "@/components/analytics/read-books-table";
 
 export default function BorrowFrequencyPage() {
   return (
@@ -33,7 +35,11 @@ export default function BorrowFrequencyPage() {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <PlaceholderContent />
+      <Card className="mt-4">
+        <CardContent className="pt-4">
+          <ReadBooksTable />
+        </CardContent>
+      </Card>
     </ContentLayout>
   );
 }

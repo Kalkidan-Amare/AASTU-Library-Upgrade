@@ -14,7 +14,7 @@ export default function DashboardCards() {
               </p>
               <div className="mt-1 flex items-center gap-x-2">
                 <h3 className="text-xl sm:text-2xl font-medium text-foreground">
-                  540
+                  6
                 </h3>
                 <span className="flex items-center gap-x-1 text-green-600">
                   <svg
@@ -65,7 +65,7 @@ export default function DashboardCards() {
               </p>
               <div className="mt-1 flex items-center gap-x-2">
                 <h3 className="mt-1 text-xl font-medium text-foreground">
-                  29.4%
+                  2.4%
                 </h3>
               </div>
             </div>
@@ -98,7 +98,7 @@ export default function DashboardCards() {
               </p>
               <div className="mt-1 flex items-center gap-x-2">
                 <h3 className="text-xl sm:text-2xl font-medium text-foreground">
-                  56
+                  5
                 </h3>
                 <span className="flex items-center gap-x-1 text-red-600">
                   <svg
@@ -143,10 +143,10 @@ export default function DashboardCards() {
           <div className="p-4 md:p-5 flex justify-between gap-x-3">
             <div>
               <p className="text-xs uppercase tracking-wide text-gray-500">
-                Books Reserved
+                Books Available
               </p>
               <div className="mt-1 flex items-center gap-x-2">
-                <h3 className="mt-1 text-xl font-medium text-foreground">13</h3>
+                <h3 className="mt-1 text-xl font-medium text-foreground">3</h3>
               </div>
             </div>
             <div className="shrink-0 flex justify-center items-center size-[46px] bg-blue-600 text-white rounded-full">

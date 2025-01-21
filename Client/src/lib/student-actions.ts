@@ -145,13 +145,76 @@ export async function notReadBooksAction(
 
     const data = await response.json();
     if (!response.ok) {
-      throw new Error(data.message || "Failed to fetch not read books");
+      throw new Error(data.message || "Failed to fetch read books");
     }
     return data;
   } catch (error: any) {
-    console.error("Error during not read books fetch:", error);
+    console.error("Error during read books fetch:", error);
     throw new Error(
-      error.message || "An error occurred during not read books fetch"
+      error.message || "An error occurred during read books fetch"
+    );
+  }
+}
+export async function readBooksAction(
+  token: string,
+  startDate: string,
+  startTime: string,
+  endDate: string,
+  endTime: string
+) {
+  try {
+    const response = await fetch(
+      process.env.BACKEND_URL + `/books/read-books`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          start_date: startDate,
+          start_time: startTime,
+          end_date: endDate,
+          end_time: endTime,
+        }),
+      }
+    );
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to fetch read books");
+    }
+    return data;
+  } catch (error: any) {
+    console.error("Error during read books fetch:", error);
+    throw new Error(
+      error.message || "An error occurred during read books fetch"
+    );
+  }
+}
+
+export async function bookHistoryAction(token: string | null, bookId: string) {
+  try {
+    const response = await fetch(process.env.BACKEND_URL + `/books/history`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        book_id: bookId,
+      }),
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to fetch read books");
+    }
+    return data;
+  } catch (error: any) {
+    console.error("Error during read books fetch:", error);
+    throw new Error(
+      error.message || "An error occurred during read books fetch"
     );
   }
 }
