@@ -1,4 +1,5 @@
 "use client";
+
 import { Menu } from "@/components/admin-panel/menu";
 import { SidebarToggle } from "@/components/admin-panel/sidebar-toggle";
 import { Button } from "@/components/ui/button";
@@ -7,8 +8,16 @@ import { useStore } from "@/hooks/use-store";
 import { cn } from "@/lib/utils";
 import { PanelsTopLeft } from "lucide-react";
 import Link from "next/link";
+import { useEffect } from "react";
 
 export function Sidebar() {
+
+  useEffect(() => {
+    if(localStorage.getItem("token") === null) {
+      window.location.href = "/login";
+    }
+  }, [])
+
   const sidebar = useStore(useSidebar, (x) => x);
   if (!sidebar) return null;
   const { isOpen, toggleOpen, getOpenState, setIsHover, settings } = sidebar;

@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { signupAction } from "@/lib/actions";
+import { Loader } from "lucide-react";
 
 export function SignupForm({
   className,
@@ -112,8 +113,8 @@ export function SignupForm({
                   required
                 />
               </div>
-              <Button type="submit" className="w-full">
-                {isLoading ? "Signing up..." : "Signup"}
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? <Loader className="animate-spin" /> : "Signup"}
               </Button>
               {(isError || passwordMatchError) && (
                 <p className="text-red-500 text-sm italic">

@@ -16,7 +16,7 @@ export function Navbar({ title }: NavbarProps) {
         </div>
         <div className="flex flex-1 items-center justify-end">
           <ModeToggle />
-          <UserNav />
+          {/* <UserNav /> */}
         </div>
       </div>
     </header>

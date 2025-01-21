@@ -49,7 +49,7 @@ export default function HomePage() {
                   <div className="flex flex-col justify-center items-center size-full">
                     <Link
                       className="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-full border border-accent bg-muted shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none disabled:opacity-50 disabled:pointer-events-none duration-300"
-                      href="/dashboard"
+                      href="/sign-up"
                     >
                       <svg
                         className="shrink-0 size-4"

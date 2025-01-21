@@ -10,6 +10,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { loginAction } from "@/lib/actions";
+import { Loader } from "lucide-react";
 
 export function LoginForm({
   className,
@@ -77,8 +78,8 @@ export function LoginForm({
                   value={password}
                 />
               </div>
-              <Button type="submit" className="w-full">
-                {isLoading ? "Logging in..." : "Login"}
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? <Loader className="animate-spin" /> : "Login"}
               </Button>
               {isError && <p className="text-red-500 text-sm italic">Invalid credentials</p>}
               <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
