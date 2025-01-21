@@ -10,6 +10,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator
 } from "@/components/ui/breadcrumb";
+import BorrowBooks from "@/components/books_page/borrow-books";
 
 export default function BorrowBooksPage() {
   return (
@@ -33,7 +34,7 @@ export default function BorrowBooksPage() {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <PlaceholderContent />
+      <BorrowBooks />
     </ContentLayout>
   );
 }

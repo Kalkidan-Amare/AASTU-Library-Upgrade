@@ -10,6 +10,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator
 } from "@/components/ui/breadcrumb";
+import IntervalCheckins from "@/components/analytics/interval-checkins";
 
 export default function StudentsAttendancePage() {
   return (
@@ -33,7 +34,7 @@ export default function StudentsAttendancePage() {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <PlaceholderContent />
+      <IntervalCheckins />
     </ContentLayout>
   );
 }

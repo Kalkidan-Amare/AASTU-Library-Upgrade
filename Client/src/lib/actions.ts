@@ -128,17 +128,14 @@ export async function updateBookAction(
   }
 ) {
   try {
-    const response = await fetch(
-      process.env.BACKEND_URL + `/books/${bookId}`,
-      {
-        method: "PUT", // Assuming you use PUT for updates
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(bookData),
-      }
-    );
+    const response = await fetch(process.env.BACKEND_URL + `/books/${bookId}`, {
+      method: "PUT", // Assuming you use PUT for updates
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(bookData),
+    });
 
     if (!response.ok) {
       const errorData = await response.json();
@@ -173,10 +170,101 @@ export async function deleteBookAction(token: string, bookId: string) {
     // but let's return the response as is here for flexibility
     const data = await response.json();
     return data;
-
   } catch (error: any) {
     console.error("Error deleting book:", error);
     console.error("Book id: ", bookId);
-    throw new Error(error.message || "An error occurred while deleting the book");
+    throw new Error(
+      error.message || "An error occurred while deleting the book"
+    );
+  }
+}
+
+export async function getBookByIdAction(token: string, bookId: string) {
+  try {
+    const response = await fetch(process.env.BACKEND_URL + `/books/${bookId}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch book");
+    }
+    const data = await response.json();
+
+    return data;
+  } catch (error: any) {
+    console.error("Error fetching book by ID:", error);
+    throw new Error(
+      error.message || "An error occurred while fetching book by ID"
+    );
+  }
+}
+
+export async function borrowBooksAction(
+  token: string,
+  userId: string,
+  bookIds: string[]
+) {
+  try {
+    const response = await fetch(
+      process.env.BACKEND_URL + `/books/borrow`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ user_id: userId, book_id: bookIds }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to borrow books");
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error: any) {
+    console.error("Error during borrowing books:", error);
+    throw new Error(
+      error.message || "An error occurred during borrowing books"
+    );
+  }
+}
+export async function returnBooksAction(
+  token: string,
+  userId: string,
+  bookIds: string[]
+) {
+  try {
+    const response = await fetch(
+      process.env.BACKEND_URL + `/books/return`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ user_id: userId, book_id: bookIds }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to return books");
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error: any) {
+    console.error("Error during returning books:", error);
+    throw new Error(
+      error.message || "An error occurred during returning books"
+    );
   }
 }
