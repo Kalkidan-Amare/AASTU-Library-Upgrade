@@ -7,19 +7,20 @@ import (
 	"aastu_lib/models"
 	"time"
     "log"
-    "os"
+    // "os"
 
-    "github.com/joho/godotenv"
+    // "github.com/joho/godotenv"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func GetJwt() string{
-    if err := godotenv.Load(); err != nil {
-		log.Fatal("Error loading .env file")
-	}
-    jwtkey := os.Getenv("JWTKEY")
+    // if err := godotenv.Load(); err != nil {
+	// 	log.Fatal("Error loading .env file")
+	// }
+    // jwtkey := os.Getenv("JWTKEY")
+    jwtkey := "the_secret_key"
     if jwtkey == "" {
         log.Fatal("JWTKEY is not set in .env file")
     }
@@ -38,7 +39,7 @@ type Claims struct{
 }
 
 func GenerateJWT(user models.User)(string,error){
-	expirationTime := time.Now().Add(24 * time.Hour)
+	expirationTime := time.Now().Add(15 * 24 * time.Hour)
 	claims := &Claims{
         UserID:   user.ID,
         Username: user.Username,
