@@ -2,9 +2,10 @@ package controllers
 
 import (
 	"aastu_lib/data"
+	"log"
 	// "aastu_lib/models"
 	"net/http"
-	"time"
+	// "time"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -21,16 +22,29 @@ func BorrowBook(c *gin.Context) {
 		return
 	}
 
+	userObjectID, err := primitive.ObjectIDFromHex(borrowReq.UserID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid book ID"})
+		return
+	}
+
 	for _, bookID := range borrowReq.BookID {
-		if err := data.BorrowBook(borrowReq.UserID, bookID); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to borrow book"})
+		bookObjectID, err := primitive.ObjectIDFromHex(bookID)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid book ID"})
+			return
+		}
+		log.Printf("Book ID: %v", bookObjectID)
+
+		if err := data.BorrowBook(userObjectID, bookObjectID); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to borrow book. ", "message": err.Error()})
 			return
 		}
 	}
 
 	user, err := data.GetUserByID(borrowReq.UserID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve user"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve student", "message": err.Error()})
 		return
 	}
 
@@ -81,6 +95,30 @@ func ReturnBook(c *gin.Context) {
 		bookObjectIDs = append(bookObjectIDs, bookObjectID)
 	}
 
+	// Check if all returned books were actually borrowed
+	for _, returnBookID := range bookObjectIDs {
+		found := false
+		for _, borrowedBookID := range user.BorrowedBooks {
+			if borrowedBookID == returnBookID {
+				found = true
+				break
+			}
+		}
+		if !found {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "One or more books were not borrowed by the user"})
+			return
+		}
+	}
+
+
+	// Update the availability of the books
+	for _, bookID := range bookObjectIDs {
+		if err := data.ReturnBook(bookID); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to return book", "message": err.Error()})
+			return
+		}
+	}
+
 	// Remove the returned books from the user's borrowed books list
 	var updatedBorrowedBooks []primitive.ObjectID
 	for _, borrowedBookID := range user.BorrowedBooks {
@@ -95,6 +133,8 @@ func ReturnBook(c *gin.Context) {
 			updatedBorrowedBooks = append(updatedBorrowedBooks, borrowedBookID)
 		}
 	}
+
+
 
 	if _, err := data.UpdateUserBorrowedBooks(returnReq.UserID, updatedBorrowedBooks); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user"})
@@ -118,60 +158,47 @@ func ReturnBook(c *gin.Context) {
 }
 
 func GetReadBooksBetweenDates(c *gin.Context) {
-	var dateRange struct {
+	var req struct {
 		StartDate string `json:"start_date"`
+		StartTime string `json:"start_time"`
 		EndDate   string `json:"end_date"`
+		EndTime   string `json:"end_time"`
 	}
 
-	if err := c.ShouldBindJSON(&dateRange); err != nil {
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
 		return
 	}
 
-	startDate, err := time.Parse(time.RFC3339, dateRange.StartDate)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid start date"})
-		return
-	}
-
-	endDate, err := time.Parse(time.RFC3339, dateRange.EndDate)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid end date"})
-		return
-	}
+	
+	startDate := req.StartDate + " " + req.StartTime
+	endDate := req.EndDate + " " + req.EndTime
 
 	books, err := data.GetReadBooksBetweenDates(startDate, endDate)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve read books"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve read books", "message": err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusOK, books)
 }
 
-
 func GetNotReadBooksBetweenDates(c *gin.Context) {
-	var dateRange struct {
+	var req struct {
 		StartDate string `json:"start_date"`
+		StartTime string `json:"start_time"`
 		EndDate   string `json:"end_date"`
+		EndTime   string `json:"end_time"`
 	}
 
-	if err := c.ShouldBindJSON(&dateRange); err != nil {
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
 		return
 	}
 
-	startDate, err := time.Parse(time.RFC3339, dateRange.StartDate)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid start date"})
-		return
-	}
-
-	endDate, err := time.Parse(time.RFC3339, dateRange.EndDate)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid end date"})
-		return
-	}
+	
+	startDate := req.StartDate + " " + req.StartTime
+	endDate := req.EndDate + " " + req.EndTime
 
 	books, err := data.GetNotReadBooksBetweenDates(startDate, endDate)
 	if err != nil {
@@ -184,8 +211,7 @@ func GetNotReadBooksBetweenDates(c *gin.Context) {
 
 func GetHistoryOfBook(c *gin.Context) {
 	var bookReq struct {
-		Title  string `json:"title"`
-		BookID string `json:"book_id"`
+		BookID primitive.ObjectID `json:"book_id"`
 	}
 
 	if err := c.ShouldBindJSON(&bookReq); err != nil {
@@ -193,7 +219,7 @@ func GetHistoryOfBook(c *gin.Context) {
 		return
 	}
 
-	history, err := data.GetHistoryOfBook(bookReq.Title, bookReq.BookID)
+	history, err := data.GetHistoryOfBook(bookReq.BookID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve book history"})
 		return
