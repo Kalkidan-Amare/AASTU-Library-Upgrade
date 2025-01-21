@@ -3,6 +3,8 @@ package data
 import (
 	"context"
 	"errors"
+	"fmt"
+	"log"
 	"time"
 
 	// "aastu_lib/config"
@@ -16,106 +18,127 @@ import (
 var borrowBooksCollection *mongo.Collection
 
 func SetBorrowBooksCollection(client *mongo.Client) {
-	borrowBooksCollection = client.Database("BookManager").Collection("borrow_books")
+	borrowBooksCollection = client.Database("BookManager").Collection("BorrowedBooks")
+	bookCollection = client.Database("BookManager").Collection("Books")
 }
 
-func BorrowBook(userID, bookID string) error {
+func BorrowBook(userID, bookID primitive.ObjectID) error {
 	// Check if the book is available
 	var book models.Book
-	err := borrowBooksCollection.FindOne(context.Background(), bson.M{"_id": bookID, "status": "available"}).Decode(&book)
+	err := bookCollection.FindOne(context.Background(), bson.M{"_id": bookID, "isavailable": true}).Decode(&book)
 	if err != nil {
 		return errors.New("book not available or does not exist")
 	}
 
-	// Update book status and record borrowing
-	_, err = borrowBooksCollection.UpdateOne(
+	// Update book isavailable and record borrowing
+	_, err = bookCollection.UpdateOne(
 		context.Background(),
 		bson.M{"_id": bookID},
-		bson.M{"$set": bson.M{"status": "borrowed"}},
+		bson.M{"$set": bson.M{"isavailable": false}},
 	)
 	if err != nil {
-		return errors.New("failed to update book status")
+		return errors.New("failed to update book isavailable")
 	}
 
 	// Record borrowing in borrow_books collection
-	bookObjectID, err := primitive.ObjectIDFromHex(bookID)
-	if err != nil {
-		return errors.New("invalid book ID")
-	}
-	userObjectID, err := primitive.ObjectIDFromHex(userID)
-	if err != nil {
-		return errors.New("invalid user ID")
-	}
-	borrow := models.Borrow_Book{
-		BookID:    bookObjectID,
-		UserID:    userObjectID,
-		BorrowedAt: time.Now(),
+	location, _ := time.LoadLocation("Africa/Addis_Ababa")
+	notBorrow := models.Borrow_Book{
+		BookID:    bookID,
+		UserID:    userID,
+		BorrowedAt: time.Now().In(location).Format("2006-01-02 15:04"),
 	}
 
-	_, err = borrowBooksCollection.InsertOne(context.Background(), borrow)
-	return err
+	_, err = borrowBooksCollection.InsertOne(context.Background(), notBorrow)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("Book borrowed: %+v", book)
+	return nil
 }
 
 func UpdateBorrowedBookReturnTime(userID, bookID primitive.ObjectID) error {
 	// Check if the user has borrowed the book
 	filter := bson.M{"user_id": userID, "book_id": bookID}
-	var borrow models.Borrow_Book
-	err := borrowBooksCollection.FindOne(context.Background(), filter).Decode(&borrow)
+	var notBorrow models.Borrow_Book
+	err := borrowBooksCollection.FindOne(context.Background(), filter).Decode(&notBorrow)
 	if err != nil {
-		return errors.New("borrow record not found")
+		return errors.New("notBorrow record not found")
 	}
 
 	// Update the return time
+	location, _ := time.LoadLocation("Africa/Addis_Ababa")
 	_, err = borrowBooksCollection.UpdateOne(
 		context.Background(),
 		filter,
-		bson.M{"$set": bson.M{"return_time": time.Now()}},
+		bson.M{"$set": bson.M{"return_time": time.Now().In(location).Format("2006-01-02 15:04")}},
 	)
 	if err != nil {
 		return errors.New("failed to update return time")
 	}
 
+	log.Printf("Return time updated for book: %+v", notBorrow)
 	return nil
 }
 
-func GetBookByTitleOrID(title, bookID string) (*models.Book, error) {
-	var book models.Book
-	filter := bson.M{}
-	if title != "" {
-		filter["title"] = title
-	}
-	if bookID != "" {
-		filter["_id"] = bookID
-	}
+// func GetBookByTitleOrID(title, bookID string) (*models.Book, error) {
+// 	var book models.Book
+// 	filter := bson.M{}
+// 	if title != "" {
+// 		filter["title"] = title
+// 	}
+// 	if bookID != "" {
+// 		filter["_id"] = bookID
+// 	}
 
-	err := borrowBooksCollection.FindOne(context.Background(), filter).Decode(&book)
+// 	err := booksCollection.FindOne(context.Background(), filter).Decode(&book)
+// 	if err != nil {
+// 		return nil, errors.New("book not found")
+// 	}
+
+// 	log.Printf("Book found: %+v", book)
+// 	return &book, nil
+// }
+
+func GetReadBooksBetweenDates(startDateStr, endDateStr string) ([]models.Borrow_Book, error) {
+	var borrowedBooks []models.Borrow_Book
+
+	// Parse startDateStr and endDateStr into time.Time
+	startDate, err := time.Parse("2006-01-02 15:04", startDateStr)
 	if err != nil {
-		return nil, errors.New("book not found")
-	}
-	return &book, nil
-}
-
-func GetReadBooksBetweenDates(startDate, endDate time.Time) ([]models.Borrow_Book, error) {
-	filter := bson.M{
-		"borrowed_at": bson.M{
-			"$gte": startDate,
-			"$lte": endDate,
-		},
+		return nil, fmt.Errorf("invalid start date format: %v", err)
 	}
 
-	cursor, err := borrowBooksCollection.Find(context.Background(), filter)
+	endDate, err := time.Parse("2006-01-02 15:04", endDateStr)
 	if err != nil {
-		return nil, errors.New("failed to retrieve borrow records")
+		return nil, fmt.Errorf("invalid end date format: %v", err)
+	}
+
+	// Fetch all notBorrow records
+	cursor, err := borrowBooksCollection.Find(context.Background(), bson.M{})
+	if err != nil {
+		return nil, errors.New("failed to retrieve notBorrow records")
 	}
 	defer cursor.Close(context.Background())
 
-	var borrowedBooks []models.Borrow_Book
+	// Manual filtering
 	for cursor.Next(context.Background()) {
-		var borrow models.Borrow_Book
-		if err := cursor.Decode(&borrow); err != nil {
+		var notBorrow models.Borrow_Book
+		if err := cursor.Decode(&notBorrow); err != nil {
 			return nil, err
 		}
-		borrowedBooks = append(borrowedBooks, borrow)
+
+		// Parse the `borrowed_at` field
+		borrowedAt, err := time.Parse("2006-01-02 15:04", notBorrow.BorrowedAt)
+		if err != nil {
+			// Skip invalid date formats
+			continue
+		}
+
+		// Include only if `borrowed_at` falls within the range
+		if borrowedAt.After(startDate) && borrowedAt.Before(endDate) {
+			borrowedBooks = append(borrowedBooks, notBorrow)
+		}
 	}
 
 	if err := cursor.Err(); err != nil {
@@ -125,28 +148,37 @@ func GetReadBooksBetweenDates(startDate, endDate time.Time) ([]models.Borrow_Boo
 	return borrowedBooks, nil
 }
 
-func GetNotReadBooksBetweenDates(startDate, endDate time.Time) ([]models.Borrow_Book, error) {
-	filter := bson.M{
-		"borrowed_at": bson.M{
-			"$gte": startDate,
-			"$lte": endDate,
-		},
-		"return_time": bson.M{"$exists": false},
+func GetNotReadBooksBetweenDates(startDateStr, endDateStr string) ([]models.Book, error) {
+	// Get the list of read books within the date range
+	readBooks, err := GetReadBooksBetweenDates(startDateStr, endDateStr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get read books: %v", err)
 	}
 
-	cursor, err := borrowBooksCollection.Find(context.Background(), filter)
+	// Create a set of book IDs for read books for quick lookup
+	readBookIDs := make(map[primitive.ObjectID]bool)
+	for _, book := range readBooks {
+		readBookIDs[book.BookID] = true
+	}
+
+	// Fetch all borrowed books
+	cursor, err := bookCollection.Find(context.Background(), bson.M{})
 	if err != nil {
-		return nil, errors.New("failed to retrieve borrow records")
+		return nil, errors.New("failed to retrieve notBorrow records")
 	}
 	defer cursor.Close(context.Background())
 
-	var notReadBooks []models.Borrow_Book
+	var notReadBooks []models.Book
 	for cursor.Next(context.Background()) {
-		var borrow models.Borrow_Book
-		if err := cursor.Decode(&borrow); err != nil {
+		var notBorrowed models.Book
+		if err := cursor.Decode(&notBorrowed); err != nil {
 			return nil, err
 		}
-		notReadBooks = append(notReadBooks, borrow)
+
+		// Include the book only if it is not in the readBooks set
+		if !readBookIDs[notBorrowed.ID] {
+			notReadBooks = append(notReadBooks, notBorrowed)
+		}
 	}
 
 	if err := cursor.Err(); err != nil {
@@ -156,26 +188,28 @@ func GetNotReadBooksBetweenDates(startDate, endDate time.Time) ([]models.Borrow_
 	return notReadBooks, nil
 }
 
-func GetHistoryOfBook(title, bookID string) ([]models.Borrow_Book, error) {
-	book, err := GetBookByTitleOrID(title, bookID)
+
+
+func GetHistoryOfBook(bookID primitive.ObjectID) ([]models.Borrow_Book, error) {
+	_, err := GetBookByID(bookID)
 	if err != nil {
 		return nil, err
 	}
 
-	filter := bson.M{"book_id": book.ID}
+	filter := bson.M{"book_id": bookID}
 	cursor, err := borrowBooksCollection.Find(context.Background(), filter)
 	if err != nil {
-		return nil, errors.New("failed to retrieve borrow records")
+		return nil, errors.New("failed to retrieve notBorrow records")
 	}
 	defer cursor.Close(context.Background())
 
 	var borrowedBooks []models.Borrow_Book
 	for cursor.Next(context.Background()) {
-		var borrow models.Borrow_Book
-		if err := cursor.Decode(&borrow); err != nil {
+		var notBorrow models.Borrow_Book
+		if err := cursor.Decode(&notBorrow); err != nil {
 			return nil, err
 		}
-		borrowedBooks = append(borrowedBooks, borrow)
+		borrowedBooks = append(borrowedBooks, notBorrow)
 	}
 
 	if err := cursor.Err(); err != nil {
