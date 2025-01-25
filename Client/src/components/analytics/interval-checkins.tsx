@@ -185,7 +185,7 @@ export default function IntervalCheckins() {
                 }
                 className="w-full md:w-[300px]"
               />
-              <Label className="text-lg">Total: {result.data.length}</Label>
+              <Label className="text-lg">Total: {result.data?.length}</Label>
             </div>
 
             {/* Columns Dropdown and Add Book Button */}

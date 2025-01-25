@@ -194,7 +194,7 @@ export default function ReadBooksTable() {
                 }
                 className="w-full md:w-[300px]"
               />
-              <Label className="text-lg">Total: {result.length}</Label>
+              <Label className="text-lg">Total: {result?.length}</Label>
             </div>
 
             {/* Columns Dropdown and Add Book Button */}
