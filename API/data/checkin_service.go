@@ -8,6 +8,8 @@ import (
 	"aastu_lib/models"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	// "go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -41,20 +43,53 @@ func GetCheckInRecord(studentID string) (models.CheckIn, error) {
 	return checkIn, err
 }
 
-func UpdateCheckOutTime(checkIn models.CheckIn, checkoutTime string) error {
-	_, err := checkinCollection.UpdateOne(
-		context.Background(),
-		bson.M{"_id": checkIn.ID},
-		bson.M{"$set": bson.M{"checkout_at": checkoutTime}},
-	)
+// func UpdateCheckOutTime(checkIn models.CheckIn, checkoutTime string) error {
+// 	_, err := checkinCollection.UpdateOne(
+// 		context.Background(),
+// 		bson.M{"_id": checkIn.ID},
+// 		bson.M{"$set": bson.M{"checkout_at": checkoutTime}},
+// 	)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	fmt.Printf("Check-out time updated: %+v\n", checkIn)
+// 	fmt.Println(checkoutTime)
+
+// 	return nil
+// }
+
+
+func UpdateCheckIn(checkIn models.CheckIn) error {
+	// Validate and parse the CheckIn ID
+	objectID, err := primitive.ObjectIDFromHex(checkIn.ID)
 	if err != nil {
-		return err
+		return fmt.Errorf("invalid check-in ID: %v", err)
 	}
-	fmt.Printf("Check-out time updated: %+v\n", checkIn)
-	fmt.Println(checkoutTime)
+
+	// Define the update operation
+	update := bson.M{
+		"$set": bson.M{
+			"userid":     checkIn.UserID,
+			"studentid":  checkIn.StudentID,
+			"checkinat":  checkIn.CheckInAt,
+			"checkoutat": checkIn.CheckOutAt,
+		},
+	}
+
+	// Perform the update
+	_, err = checkinCollection.UpdateOne(
+		context.Background(),
+		bson.M{"_id": objectID}, // Match by ObjectID
+		update,
+	)
+
+	if err != nil {
+		return fmt.Errorf("failed to update check-in: %v", err)
+	}
 
 	return nil
 }
+
 
 func GetStudentCheckInsInInterval(startTimeStr, endTimeStr string) ([]models.CheckIn, error) {
 	var checkIns []models.CheckIn
@@ -167,3 +202,44 @@ func GetUserCheckIns(studentID, startDate, endDate string) ([]models.CheckIn, er
 	return checkIns, nil
 }
 
+func GetDailyCheckIns(date string) ([]models.CheckIn, error) {
+	var checkIns []models.CheckIn
+
+	// Parse the input date string into time.Time
+	targetDate, err := time.Parse("2006-01-02", date)
+	if err != nil {
+		return nil, fmt.Errorf("invalid date format: %v", err)
+	}
+
+	// Fetch all check-ins
+	cursor, err := checkinCollection.Find(context.Background(), bson.M{})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.Background())
+
+	for cursor.Next(context.Background()) {
+		var checkIn models.CheckIn
+		if err := cursor.Decode(&checkIn); err != nil {
+			return nil, err
+		}
+
+		// Parse `checkin_at` string into time.Time
+		checkInTime, err := time.Parse("2006-01-02 15:04", checkIn.CheckInAt)
+		if err != nil {
+			// Skip invalid date formats
+			continue
+		}
+
+		// Check if the date part matches the target date
+		if checkInTime.Year() == targetDate.Year() && checkInTime.Month() == targetDate.Month() && checkInTime.Day() == targetDate.Day() {
+			checkIns = append(checkIns, checkIn)
+		}
+	}
+
+	if err := cursor.Err(); err != nil {
+		return nil, err
+	}
+
+	return checkIns, nil
+}

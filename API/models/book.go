@@ -10,4 +10,7 @@ type Book struct {
 	IsAvailable bool   `json:"status"`
 	ShelfNo	 	string `json:"shelf_no"`
 	Author      string `json:"author"`
+
+	//ToDo add Tags for more filter...
+	//ToDo add ISBN, photo
 }
