@@ -20,6 +20,7 @@ func main() {
 	data.SetBookCollection(client)
 	data.SetBorrowBooksCollection(client)
 	data.SetCheckinCollection(client)
+	data.SetOtpCollection(client)
 
 	// Setup router and run server
 	// port := os.Getenv("PORT")

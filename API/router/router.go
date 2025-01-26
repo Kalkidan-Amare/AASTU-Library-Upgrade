@@ -41,11 +41,23 @@ func SetupUserRouter(r *gin.Engine) {
 	//ToDo if necessary CRUD operations on users
 	user := r.Group("/users")
 	{
+	
 		user.POST("/register", controllers.RegisterStudent)
 		user.POST("/register-admin", controllers.RegisterAdmin)
+		user.POST("/verify-otp", controllers.VerifyOTP)
 		user.POST("/login-admin", controllers.LoginAdmin)
 		user.POST("/authenticate", controllers.AuthenticateUser)
-
+		
+		user.POST("/forgot-password", controllers.ForgotPassword)
+		user.POST("/reset-password", controllers.ResetPassword)
+		
+		user.Use(middleware.AuthMiddleware())
+		admin := user.Group("/")
+		admin.Use(middleware.AdminMiddleware())
+		{
+			user.POST("/approve", controllers.ApproveStaff)
+			admin.GET("/staff-list", controllers.GetStaffList)
+		}
 		//ToDo logout
 	}
 
@@ -60,6 +72,7 @@ func SetupCheckInRouter(r *gin.Engine) {
 		// checkin.POST("/analyze", controllers.AnalyzeLibraryTraffic)
 		checkin.POST("/user-checkins", controllers.GetUserCheckIns)
 		checkin.POST("/interval-checkins", controllers.GetStudentCheckInsInInterval)
+		checkin.GET("/daily-checkins", controllers.GetDailyCheckIns)
 	}
 }
 

@@ -104,7 +104,7 @@ func AdminMiddleware() gin.HandlerFunc {
     return func(c *gin.Context) {
         user, exists := c.Get("user")
         if !exists {
-            c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+            c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized on admin middleware"})
             c.Abort()
             return
         }
@@ -116,7 +116,7 @@ func AdminMiddleware() gin.HandlerFunc {
             return
         }
 
-        if claims.Role != "admin" {
+        if claims.Role != "admin" && claims.Role != "rootadmin" {
 			c.AbortWithStatus(http.StatusForbidden)
 			return
 		}
