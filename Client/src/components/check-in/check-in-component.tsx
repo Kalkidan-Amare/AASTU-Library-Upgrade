@@ -34,6 +34,10 @@ interface CheckinSuccess {
     password: string;
     role: string;
     borrowed_books: null;
+    sex: string;
+    department: string;
+    entry_batch: string;
+    img_url: string;
   };
 }
 interface NotCheckedInError {
@@ -103,7 +107,7 @@ export default function CheckInComponent() {
         <div className="grid grid-cols-3">
           <div className="p-4">
             <Avatar className="w-48 h-48">
-              <AvatarImage src="https://github.com/shadcn.png" className="" />
+              <AvatarImage src={user.img_url} className="" />
               <AvatarFallback>CN</AvatarFallback>
             </Avatar>
           </div>
@@ -117,11 +121,11 @@ export default function CheckInComponent() {
               <p className="text-muted-foreground h-6">Status</p>
             </div>
             <div className="flex flex-col gap-4">
-              <p className="text-lg font-bold h-6">Kalkidan Amare</p>
+              <p className="text-lg font-bold h-6">{user.username}</p>
               <p className="h-6">{user.student_id}</p>
-              <p className="h-6">Male</p>
-              <p className="h-6">Software Engineering</p>
-              <p className="h-6">2014</p>
+              <p className="h-6">{user.sex}</p>
+              <p className="h-6">{user.department}</p>
+              <p className="h-6">{user.entry_batch}</p>
               <p className="h-6">Active</p>
             </div>
           </div>
@@ -149,7 +153,7 @@ export default function CheckInComponent() {
       const { error } = result as NotCheckedInError;
       return (
         <p style={{ color: "red" }}>
-          <strong>Error:</strong> {error}
+          <strong> Error: Student has not checked out yet or does not exit in database </strong>
         </p>
       );
     }

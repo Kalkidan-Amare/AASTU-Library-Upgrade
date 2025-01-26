@@ -29,7 +29,8 @@ export function SignupForm({
     },
     onSuccess: () => {
       console.log("Signup successfull");
-      router.push("/login");
+      localStorage.setItem("email", email);
+      router.push("/verify-otp");
       //do whatever you want on successfull signup
     },
     onError: (error) => {

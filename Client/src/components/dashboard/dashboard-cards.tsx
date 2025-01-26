@@ -1,5 +1,9 @@
 "use client";
 
+import AvailableBooksCount from "./availableBooksCount";
+import DailyBorrowedBooks from "./DailyBorrowedBooks";
+import DailyCheckinCount from "./DailyCheckinCount";
+
 export default function DashboardCards() {
   return (
     <div className=" mx-auto">
@@ -10,30 +14,13 @@ export default function DashboardCards() {
           <div className="p-4 md:p-5 flex justify-between gap-x-3">
             <div>
               <p className="text-xs uppercase tracking-wide text-gray-500">
-                Total Students Checked In
+                Total Students Checked In Today
               </p>
               <div className="mt-1 flex items-center gap-x-2">
                 <h3 className="text-xl sm:text-2xl font-medium text-foreground">
-                  6
+                  <DailyCheckinCount />
                 </h3>
-                <span className="flex items-center gap-x-1 text-green-600">
-                  <svg
-                    className="inline-block size-5 self-center"
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
-                    <polyline points="16 7 22 7 22 13" />
-                  </svg>
-                  <span className="inline-block text-lg">1.7%</span>
-                </span>
+               
               </div>
             </div>
             <div className="shrink-0 flex justify-center items-center size-[46px] bg-blue-600 text-white rounded-full">
@@ -57,7 +44,7 @@ export default function DashboardCards() {
             </div>
           </div>
         </div>{" "}
-        <div className="flex flex-col bg-background border shadow-sm rounded-xl">
+        {/* <div className="flex flex-col bg-background border shadow-sm rounded-xl">
           <div className="p-4 md:p-5 flex justify-between gap-x-3">
             <div>
               <p className="text-xs uppercase tracking-wide text-gray-500">
@@ -89,35 +76,18 @@ export default function DashboardCards() {
               </svg>
             </div>
           </div>
-        </div>{" "}
+        </div>{" "} */}
         <div className="flex flex-col bg-background border shadow-sm rounded-xl">
           <div className="p-4 md:p-5 flex justify-between gap-x-3">
             <div>
               <p className="text-xs uppercase tracking-wide text-gray-500">
-                Total Books Borrowed
+                Total Book Borrowals Today
               </p>
               <div className="mt-1 flex items-center gap-x-2">
                 <h3 className="text-xl sm:text-2xl font-medium text-foreground">
-                  5
+                  <DailyBorrowedBooks />
                 </h3>
-                <span className="flex items-center gap-x-1 text-red-600">
-                  <svg
-                    className="inline-block size-4 self-center"
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <polyline points="22 17 13.5 8.5 8.5 13.5 2 7" />
-                    <polyline points="16 17 22 17 22 11" />
-                  </svg>
-                  <span className="inline-block text-lg">1.7%</span>
-                </span>
+                
               </div>
             </div>
             <div className="shrink-0 flex justify-center items-center size-[46px] bg-blue-600 text-white rounded-full">
@@ -146,7 +116,7 @@ export default function DashboardCards() {
                 Books Available
               </p>
               <div className="mt-1 flex items-center gap-x-2">
-                <h3 className="mt-1 text-xl font-medium text-foreground">3</h3>
+                <h3 className="mt-1 text-xl font-medium text-foreground"><AvailableBooksCount /></h3>
               </div>
             </div>
             <div className="shrink-0 flex justify-center items-center size-[46px] bg-blue-600 text-white rounded-full">

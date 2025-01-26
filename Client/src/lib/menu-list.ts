@@ -96,5 +96,15 @@ export function getMenuList(pathname: string): Group[] {
         },
       ],
     },
+    {
+      groupLabel: "Accounts",
+      menus: [
+        {
+          href: "/staff-accounts",
+          label: "Staff Accounts",
+          icon: Users,
+        },
+      ],
+    },
   ];
 }

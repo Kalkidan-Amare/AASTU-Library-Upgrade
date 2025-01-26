@@ -81,7 +81,7 @@ export async function studentAuthenticateAction(
 }
 
 export async function intervalCheckInsAction(
-  token: string,
+  token: string | null,
   startDate: string,
   startTime: string,
   endDate: string,
@@ -156,7 +156,7 @@ export async function notReadBooksAction(
   }
 }
 export async function readBooksAction(
-  token: string,
+  token: string | null,
   startDate: string,
   startTime: string,
   endDate: string,

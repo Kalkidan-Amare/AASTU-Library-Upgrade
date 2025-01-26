@@ -48,11 +48,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { addBookAction, getBooksAction } from "@/lib/actions";
-import UpdateBookDialog from "./update-book";
-import DeleteBookDialogue from "./delete-book";
-import { Textarea } from "../ui/textarea";
-import BookDialogue from "./book_dialogue";
+import { getStaffsAction } from "@/lib/actions";
+import ApproveStaffDialog from "./approve-staff-dialogue";
 
 // Define the Book type
 export type Book = {
@@ -66,40 +63,53 @@ export type Book = {
   status: boolean;
 };
 
+export type Staff = {
+  id: string;
+  username: string;
+  email: string;
+  student_id: string;
+  password: string;
+  role: string;
+  borrowed_books: string[];
+  is_checked_in: boolean;
+  approved: boolean;
+};
+
 // Initial sample data
 const initialBooks: Book[] = [];
+const initialStaff: Staff[] = [];
 
 // Define the table columns
-const columns: ColumnDef<Book>[] = [
+const columns: ColumnDef<Staff>[] = [
   {
-    accessorKey: "title",
+    accessorKey: "username",
     header: ({ column }) => (
       <Button
         variant="ghost"
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
       >
-        Title <ArrowUpDown className="ml-2 h-4 w-4" />
+        Username <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
     cell: ({ row }) => (
-      <div className="font-medium">{row.getValue("title")}</div>
+      <div className="font-medium">{row.getValue("username")}</div>
     ),
   },
   {
-    accessorKey: "author",
-    header: "Author",
-    cell: ({ row }) => <div>{row.getValue("author")}</div>,
+    accessorKey: "email",
+    header: "Email",
+    cell: ({ row }) => <div>{row.getValue("email")}</div>,
   },
   {
-    accessorKey: "status",
+    accessorKey: "approved",
     header: "Status",
     cell: ({ row }) => (
       <div
         className={`capitalize ${
-          row.getValue("status") === true ? "text-green-600" : "text-red-600"
+          row.getValue("approved") === true ? "text-green-600" : "text-red-600"
         }`}
       >
-        {row.getValue("status") ? "Available" : "Issued"}
+        {row.getValue("approved") ? "Approved" : "Not approved"}
       </div>
     ),
   },
@@ -108,9 +118,9 @@ const columns: ColumnDef<Book>[] = [
     header: "Action",
     cell: ({ row }) => (
       <div className="text-primary cursor-pointer">
-        <UpdateBookDialog onUpdateBook={() => {}} bookData={row.original}>
+        <ApproveStaffDialog onUpdateBook={() => {}} bookData={row.original}>
           <Pencil />
-        </UpdateBookDialog>
+        </ApproveStaffDialog>
       </div>
     ),
   },
@@ -119,173 +129,17 @@ const columns: ColumnDef<Book>[] = [
 const token = localStorage.getItem("token");
 
 // Reusable Add Book Dialog Component
-const AddBookDialog = ({ onAddBook }: { onAddBook: () => void }) => {
-  const queryClient = useQueryClient();
-  const [newBook, setNewBook] = React.useState<Book>({
-    id: "",
-    title: "",
-    author: "",
-    description: "",
-    bar_code: "",
-    shelf_no: "",
-    isbn: "",
-    status: true,
-  });
 
-  const {
-    mutate: addBook,
-    isLoading: isAdding,
-    isError: isAddError,
-    error: addError,
-  } = useMutation({
-    mutationFn: async () => {
-      if (!token) {
-        throw new Error("No auth token provided");
-      }
-      return addBookAction(token, newBook);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["books"] });
-      setNewBook({
-        id: "",
-        title: "",
-        author: "",
-        description: "",
-        bar_code: "",
-        shelf_no: "",
-        isbn: "",
-        status: true,
-      });
-      onAddBook();
-    },
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    addBook();
-  };
-
-  return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" /> Add Book
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Add a New Book</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label htmlFor="title">Title</Label>
-            <Input
-              id="title"
-              placeholder="Book Title"
-              value={newBook.title}
-              onChange={(e) =>
-                setNewBook({ ...newBook, title: e.target.value })
-              }
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              placeholder="Book Description"
-              value={newBook.description}
-              onChange={(e) =>
-                setNewBook({ ...newBook, description: e.target.value })
-              }
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="author">Author</Label>
-            <Input
-              id="author"
-              placeholder="Author Name"
-              value={newBook.author}
-              onChange={(e) =>
-                setNewBook({ ...newBook, author: e.target.value })
-              }
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="shelf_no">Shelf No</Label>
-            <Input
-              id="shelf_no"
-              placeholder="Shelf Number"
-              value={newBook.shelf_no}
-              onChange={(e) =>
-                setNewBook({ ...newBook, shelf_no: e.target.value })
-              }
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="bar_code">Bar Code</Label>
-            <Input
-              id="bar_code"
-              placeholder="Bar Code"
-              value={newBook.bar_code}
-              onChange={(e) =>
-                setNewBook({ ...newBook, bar_code: e.target.value })
-              }
-              required
-            />
-          </div>
-          {/* <div>
-            <Label htmlFor="isbn">ISBN</Label>
-            <Input
-              id="isbn"
-              placeholder="ISBN Number"
-              value={newBook.isbn}
-              onChange={(e) => setNewBook({ ...newBook, isbn: e.target.value })}
-              required
-            />
-          </div> */}
-          <div>
-            <Label htmlFor="status">Status</Label>
-            <select
-              id="status"
-              value={newBook.status ? "available" : "issued"}
-              onChange={(e) =>
-                setNewBook({
-                  ...newBook,
-                  status: e.target.value == "available" ? true : false,
-                })
-              }
-              className="w-full rounded-md border px-3 py-2"
-            >
-              <option value="available">Available</option>
-              <option value="issued">Issued</option>
-            </select>
-          </div>
-          <Button type="submit" className="w-full" disabled={isAdding}>
-            {isAdding ? (
-              <Loader className=" h-4 w-4 animate-spin" />
-            ) : (
-              "Add Book"
-            )}
-          </Button>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-};
 
 // Main Component
-export function ViewAllBooks() {
-  const [books, setBooks] = React.useState<Book[]>(initialBooks);
+export function StaffAccountsTable() {
+  const [staffs, setStaffs] = React.useState<Staff[]>(initialStaff);
 
   const { data, isLoading, isError, error, isFetched, refetch, isRefetching } =
     useQuery({
-      queryKey: ["books"],
+      queryKey: ["staffs"],
       queryFn: async () => {
-        return getBooksAction(token);
+        return getStaffsAction(token);
       },
       enabled: !!token,
       staleTime: 0,
@@ -293,7 +147,7 @@ export function ViewAllBooks() {
 
   React.useEffect(() => {
     if (isFetched && !isRefetching) {
-      setBooks(data);
+      setStaffs(data);
       console.log(data);
     }
   }, [isFetched, isRefetching]);
@@ -307,7 +161,7 @@ export function ViewAllBooks() {
   const [rowSelection, setRowSelection] = React.useState({});
 
   const table = useReactTable({
-    data: books,
+    data: staffs,
     columns,
     state: {
       sorting,
@@ -325,9 +179,6 @@ export function ViewAllBooks() {
     getPaginationRowModel: getPaginationRowModel(),
   });
 
-  const handleAddBook = () => {
-    refetch();
-  };
 
   return (
     <div className="w-full p-4">
@@ -336,10 +187,10 @@ export function ViewAllBooks() {
         {/* Filter Input */}
         <div className="w-full md:w-auto">
           <Input
-            placeholder="Filter books by title..."
-            value={(table.getColumn("title")?.getFilterValue() as string) ?? ""}
+            placeholder="Filter staffs by email..."
+            value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
             onChange={(event) =>
-              table.getColumn("title")?.setFilterValue(event.target.value)
+              table.getColumn("email")?.setFilterValue(event.target.value)
             }
             className="w-full md:w-[300px]"
           />
@@ -366,7 +217,6 @@ export function ViewAllBooks() {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-          <AddBookDialog onAddBook={handleAddBook} />
         </div>
       </div>
 
@@ -401,18 +251,6 @@ export function ViewAllBooks() {
                       )}
                     </TableCell>
                   ))}
-                  <TableCell>
-                  <BookDialogue bookId={row.original.id}>
-                  <ListMinus className="cursor-pointer"/>
-                  </BookDialogue>
-
-                  </TableCell>
-                  <DeleteBookDialogue
-                    onDeleteBook={() => refetch()}
-                    bookId={row.original.id}
-                  >
-                    <Trash2 className="text-red-500 cursor-pointer" />
-                  </DeleteBookDialogue>
                 </TableRow>
               ))
             ) : (

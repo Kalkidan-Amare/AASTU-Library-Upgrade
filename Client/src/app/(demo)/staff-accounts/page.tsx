@@ -10,10 +10,20 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { ViewAllBooks } from "@/components/books_page/ViewallBooks";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { StaffAccountsTable } from "@/components/staff-accounts-table";
 
-export default function AccountPage() {
+export default function StaffAccountsPage() {
   return (
-    <ContentLayout title="Account">
+    <ContentLayout title="Staff Accounts">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -29,11 +39,16 @@ export default function AccountPage() {
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbPage>Account</BreadcrumbPage>
+            <BreadcrumbPage>Staff Accounts</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <PlaceholderContent />
+      {/* <PlaceholderContent /> */}
+      <Card className="mt-4">
+        <CardHeader>
+          <StaffAccountsTable />
+        </CardHeader>
+      </Card>
     </ContentLayout>
   );
 }

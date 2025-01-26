@@ -36,7 +36,7 @@ export async function signupAction(
   password: string
 ) {
   try {
-    const response = await fetch(process.env.BACKEND_URL + "/users/register", {
+    const response = await fetch(process.env.BACKEND_URL + "/users/register-admin", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -55,6 +55,93 @@ export async function signupAction(
   } catch (error: any) {
     console.error("Error during signup:", error);
     throw new Error(error.message || "An error occurred during signup");
+  }
+}
+export async function resetPasswordAction(
+  email: string | null,
+  otp: string,
+  newpassword: string
+) {
+  try {
+    const response = await fetch(
+      process.env.BACKEND_URL + "/users/reset-password",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ otp, email, newpassword }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "reset-password failed");
+    }
+
+    const data = await response.json();
+    revalidatePath("/reset-password");
+    return data;
+  } catch (error: any) {
+    console.error("Error during reset-password:", error);
+    throw new Error(error.message || "An error occurred during reset-password");
+  }
+}
+export async function forgetPasswordAction(email: string) {
+  try {
+    const response = await fetch(
+      process.env.BACKEND_URL + "/users/forgot-password",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Forgot Password failed");
+    }
+
+    const data = await response.json();
+    revalidatePath("/forgot-password");
+    return data;
+  } catch (error: any) {
+    console.error("Error during Forgot Password:", error);
+    throw new Error(
+      error.message || "An error occurred during Forgot Password"
+    );
+  }
+}
+
+export async function OTPAction(email: string | null, otp: string) {
+  try {
+    const response = await fetch(
+      process.env.BACKEND_URL + "/users/verify-otp",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, otp }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "OTP verification failed");
+    }
+
+    const data = await response.json();
+    revalidatePath("/verify-otp");
+    return data;
+  } catch (error: any) {
+    console.error("Error during OTP verification:", error);
+    throw new Error(
+      error.message || "An error occurred during OTP verification"
+    );
   }
 }
 
@@ -78,6 +165,34 @@ export async function getBooksAction(token: string | null) {
   } catch (error: any) {
     console.error("Error fetching books:", error);
     throw new Error(error.message || "An error occurred while fetching books");
+  }
+}
+
+export async function getStaffsAction(token: string | null) {
+  try {
+    const response = await fetch(
+      process.env.BACKEND_URL + "/users/staff-list",
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch staff list");
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error: any) {
+    console.error("Error fetching staff list", error);
+    throw new Error(
+      error.message || "An error occurred while fetching staff list"
+    );
   }
 }
 
@@ -112,6 +227,30 @@ export async function addBookAction(
   } catch (error: any) {
     console.error("Error adding book:", error);
     throw new Error(error.message || "An error occurred while adding the book");
+  }
+}
+
+export async function approveAction(token: string, id: string) {
+  try {
+    const response = await fetch(process.env.BACKEND_URL + "/users/approve", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to approve");
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error: any) {
+    console.error("Error approve:", error);
+    throw new Error(error.message || "An error occurred while approve");
   }
 }
 
@@ -210,17 +349,14 @@ export async function borrowBooksAction(
   bookIds: string[]
 ) {
   try {
-    const response = await fetch(
-      process.env.BACKEND_URL + `/books/borrow`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ user_id: userId, book_id: bookIds }),
-      }
-    );
+    const response = await fetch(process.env.BACKEND_URL + `/books/borrow`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ user_id: userId, book_id: bookIds }),
+    });
 
     if (!response.ok) {
       const errorData = await response.json();
@@ -242,17 +378,14 @@ export async function returnBooksAction(
   bookIds: string[]
 ) {
   try {
-    const response = await fetch(
-      process.env.BACKEND_URL + `/books/return`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ user_id: userId, book_id: bookIds }),
-      }
-    );
+    const response = await fetch(process.env.BACKEND_URL + `/books/return`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ user_id: userId, book_id: bookIds }),
+    });
 
     if (!response.ok) {
       const errorData = await response.json();

@@ -6,34 +6,45 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import { useMutation } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { loginAction } from "@/lib/actions";
+import { useRouter } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
+import { forgetPasswordAction, signupAction } from "@/lib/actions";
 import { Loader } from "lucide-react";
 
-export function LoginForm({
+export function ForgetPasswordForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
-  const router = useRouter();
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [passwordMatchError, setPasswordMatchError] = useState("");
+  const router = useRouter();
 
   const { mutate, isLoading, isError, error } = useMutation({
     mutationFn: async () => {
-      return loginAction(email, password);
+      return forgetPasswordAction(email);
     },
-    onSuccess: (data) => {
-      console.log("Login successfull", data);
-      localStorage.setItem("token", data.token);
-      router.push("/dashboard");
-      
+    onSuccess: () => {
+      console.log("Forget Password successfull");
+      localStorage.setItem("email", email);
+      router.push("/reset-password");
+      //do whatever you want on successfull signup
+    },
+    onError: (error) => {
+      console.log(error);
+      if (error instanceof Error) {
+        // Handle the error returned from the server action
+        if (error?.message) setPasswordMatchError(error.message);
+      } else {
+        // Handle unexpected errors
+        setPasswordMatchError("An unexpected error occurred");
+      }
     },
   });
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    setPasswordMatchError("");
     mutate();
   };
 
@@ -44,9 +55,9 @@ export function LoginForm({
           <form className="p-6 md:p-8" onSubmit={handleSubmit}>
             <div className="flex flex-col gap-6">
               <div className="flex flex-col items-center text-center">
-                <h1 className="text-2xl font-bold">Welcome back</h1>
+                <h1 className="text-2xl font-bold">Welcome to AASTU Library</h1>
                 <p className="text-balance text-muted-foreground">
-                  Login to your account
+                  Forgot Password
                 </p>
               </div>
               <div className="grid gap-2">
@@ -55,40 +66,26 @@ export function LoginForm({
                   id="email"
                   type="email"
                   placeholder="m@example.com"
-                  onChange={(e) => setEmail(e.target.value)}
                   value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
-                />
-              </div>
-              <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
-                  <Link
-                    href="/forget-password"
-                    className="ml-auto text-sm underline-offset-2 hover:underline"
-                  >
-                    Forgot your password?
-                  </Link>
-                </div>
-                <Input
-                  id="password"
-                  type="password"
-                  required
-                  onChange={(e) => setPassword(e.target.value)}
-                  value={password}
                 />
               </div>
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? <Loader className="animate-spin" /> : "Login"}
+                {isLoading ? <Loader className="animate-spin" /> : "Submit"}
               </Button>
-              {isError && <p className="text-red-500 text-sm italic">Invalid credentials</p>}
+              {(isError || passwordMatchError) && (
+                <p className="text-red-500 text-sm italic">
+                  {passwordMatchError}
+                </p>
+              )}
               <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
                 <span className="relative z-10 bg-background px-2 text-muted-foreground"></span>
               </div>
               <div className="text-center text-sm">
-                Don&apos;t have an account?{" "}
-                <Link href="/sign-up" className="underline underline-offset-4">
-                  Sign up
+                Already have an account?{" "}
+                <Link href="/login" className="underline underline-offset-4">
+                  Sign in
                 </Link>
               </div>
             </div>
