@@ -3,7 +3,7 @@ package controllers
 import (
 	"aastu_lib/data"
 	"aastu_lib/models"
-	// "fmt"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -22,9 +22,15 @@ func CheckIn(c *gin.Context) {
 
 	user, err := data.GetUserByStudentID(req.StudentId)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user", "message": err.Error()})
+		c.JSON(http.StatusOK, gin.H{"error": "Failed to fetch user", "message": err.Error()})
 		return
 	}
+
+	if user.IsCheckedIn {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "User is already checked in"})
+		return
+	}
+
 
 	location, _ := time.LoadLocation("Africa/Addis_Ababa")
 	checkIn := models.CheckIn{
@@ -34,7 +40,16 @@ func CheckIn(c *gin.Context) {
 	}
 
 	if err := data.CreateCheckInRecord(checkIn); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to record check-in"})
+		c.JSON(http.StatusOK, gin.H{"error": "Failed to record check-in"})
+		return
+	}
+
+	fmt.Println(user)
+
+	user.IsCheckedIn = true
+	fmt.Println(user)
+	if err := data.UpdateUser(user); err != nil {
+		c.JSON(http.StatusOK, gin.H{"error": "Failed to update user status"})
 		return
 	}
 
@@ -45,33 +60,54 @@ func CheckOut(c *gin.Context) {
 	var req struct {
 		StudentId string `json:"student_id"`
 	}
-
+	
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
 		return
 	}
-
+	
 	user, err := data.GetUserByStudentID(req.StudentId)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to fetch user", "message": err.Error()})
 		return
 	}
+	
+	fmt.Println("hello before")
 
 	checkIn, err := data.GetCheckInRecord(req.StudentId)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Check-in record not found", "message": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Check-in record not found", "message": err.Error()})
+		return
+	}
+	// fmt.Println(user.IsCheckedIn)
+	if !user.IsCheckedIn {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "User is not checked in"})
 		return
 	}
 
+	fmt.Println("hello")
+
 	if len(user.BorrowedBooks) > 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Student has not returned all borrowed books", "borrowed_books": user.BorrowedBooks})
+		c.JSON(http.StatusOK, gin.H{"error": "Student has not returned all borrowed books", "borrowed_books": user.BorrowedBooks})
 		return
 	}
 
 	location, _ := time.LoadLocation("Africa/Addis_Ababa")
 	checkOutTime := time.Now().In(location).Format("2006-01-02 15:04")
-	if err := data.UpdateCheckOutTime(checkIn, checkOutTime); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to record check-out"})
+	checkIn.CheckOutAt = checkOutTime
+	// if err := data.UpdateCheckOutTime(checkIn, checkOutTime); err != nil {
+	// 	c.JSON(http.StatusOK, gin.H{"error": "Failed to record check-out"})
+	// 	return
+	// }
+
+	if err:= data.UpdateCheckIn(checkIn); err != nil{
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to record check-out"})
+		return
+	}
+
+	user.IsCheckedIn = false
+	if err := data.UpdateUser(user); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to update user status"})
 		return
 	}
 
@@ -99,7 +135,7 @@ func CheckOut(c *gin.Context) {
 
 // 	count, err := data.GetStudentCheckInsInInterval(startDateTime, endDateTime)
 // 	if err != nil {
-// 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to analyze library traffic"})
+// 		c.JSON(http.StatusOK, gin.H{"error": "Failed to analyze library traffic"})
 // 		return
 // 	}
 
@@ -127,7 +163,7 @@ func GetUserCheckIns(c *gin.Context) {
 
 	checkIns, err := data.GetUserCheckIns(req.StudentID, startDateTime, endDateTime)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve check-ins"})
+		c.JSON(http.StatusOK, gin.H{"error": "Failed to retrieve check-ins"})
 		return
 	}
 
@@ -152,9 +188,23 @@ func GetStudentCheckInsInInterval(c *gin.Context) {
 
 	checkIns, err := data.GetStudentCheckInsInInterval(startDateTime, endDateTime)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve check-ins"})
+		c.JSON(http.StatusOK, gin.H{"error": "Failed to retrieve check-ins"})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Student check-ins retrieved successfully", "data": checkIns})
+}
+
+
+func GetDailyCheckIns(c *gin.Context) {
+	location, _ := time.LoadLocation("Africa/Addis_Ababa")
+	date := time.Now().In(location).Format("2006-01-02")
+
+	checkIns, err := data.GetDailyCheckIns(date)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{"error": "Failed to retrieve check-ins"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Daily check-ins retrieved successfully", "data": checkIns})
 }

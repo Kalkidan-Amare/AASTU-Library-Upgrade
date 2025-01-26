@@ -99,5 +99,5 @@ func DeleteBook(c *gin.Context){
 		c.JSON(http.StatusNotFound, err.Error())
 		return
 	}
-	c.JSON(http.StatusNoContent, nil)
+	c.JSON(http.StatusOK, nil)
 }

@@ -4,6 +4,7 @@ import (
 	"aastu_lib/models"
 	"context"
 	"errors"
+	"fmt"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -35,6 +36,26 @@ func GetUserByID(id string) (models.User, error) {
 func GetUserByStudentID(studentID string) (models.User, error) {
 	var user models.User
 	err := userCollection.FindOne(context.Background(), bson.M{"student_id": studentID}).Decode(&user)
+	if err != nil {
+		return models.User{}, err
+	}
+
+	return user, nil
+}
+
+func GetUserByEmail(email string) (models.User, error) {
+	var user models.User
+	err := userCollection.FindOne(context.Background(), bson.M{"email": email}).Decode(&user)
+	if err != nil {
+		return models.User{}, err
+	}
+
+	return user, nil
+}
+
+func GetUserByUsername(username string) (models.User, error) {
+	var user models.User
+	err := userCollection.FindOne(context.Background(), bson.M{"username": username}).Decode(&user)
 	if err != nil {
 		return models.User{}, err
 	}
@@ -91,4 +112,72 @@ func UpdateUserBorrowedBooks(id string, borrowedBooks []primitive.ObjectID) (mod
 	}
 
 	return GetUserByID(id)
+}
+
+func GetStaffList() ([]models.User, error) {
+	var users []models.User
+	cursor, err := userCollection.Find(context.Background(), bson.M{"role": "admin"})
+	if err != nil {
+		return []models.User{}, err
+	}
+	defer cursor.Close(context.Background())
+
+	for cursor.Next(context.Background()) {
+		var user models.User
+		if err := cursor.Decode(&user); err != nil {
+			return []models.User{}, err
+		}
+
+		users = append(users, user)
+	}
+
+	return users, nil
+}
+
+func UpdateUser(user models.User) error {
+	// Validate the ObjectID
+	if user.ID.IsZero() {
+		return fmt.Errorf("invalid user ID: cannot be empty")
+	}
+
+	// Fetch the existing user
+	existingUser, err := GetUserByID(user.ID.Hex())
+	if err != nil {
+		return fmt.Errorf("failed to fetch existing user: %v", err)
+	}
+
+	// Update operation with conditional updates
+	update := bson.M{
+		"$set": bson.M{
+			"username":       ifNotEmpty(user.Username, existingUser.Username),
+			"email":          ifNotEmpty(user.Email, existingUser.Email),
+			"student_id":     ifNotEmpty(user.StudentId, existingUser.StudentId),
+			"password":       ifNotEmpty(user.Password, existingUser.Password),
+			"role":           ifNotEmpty(user.Role, existingUser.Role),
+			"borrowed_books": ifNotEmpty(user.BorrowedBooks, existingUser.BorrowedBooks),
+			"is_checked_in":  ifNotEmpty(user.IsCheckedIn, existingUser.IsCheckedIn),
+			"approved":       ifNotEmpty(user.Approved, existingUser.Approved),
+		},
+	}
+
+	// Perform the update
+	result := userCollection.FindOneAndUpdate(
+		context.Background(),
+		bson.M{"_id": user.ID}, // Match by ObjectID
+		update,
+	)
+
+	if result.Err() != nil {
+		return fmt.Errorf("failed to update user: %v", result.Err())
+	}
+
+	return nil
+}
+
+// Helper function to check if a field is not empty
+func ifNotEmpty(newValue interface{}, oldValue interface{}) interface{} {
+	if newValue != nil && newValue != "" {
+		return newValue
+	}
+	return oldValue
 }
