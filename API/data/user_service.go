@@ -157,6 +157,10 @@ func UpdateUser(user models.User) error {
 			"borrowed_books": ifNotEmpty(user.BorrowedBooks, existingUser.BorrowedBooks),
 			"is_checked_in":  ifNotEmpty(user.IsCheckedIn, existingUser.IsCheckedIn),
 			"approved":       ifNotEmpty(user.Approved, existingUser.Approved),
+			"sex":            ifNotEmpty(user.Sex, existingUser.Sex),
+			"department":     ifNotEmpty(user.Department, existingUser.Department),
+			"entry_batch":    ifNotEmpty(user.EntryBatch, existingUser.EntryBatch),
+			"img_url":        ifNotEmpty(user.ImgURL, existingUser.ImgURL),
 		},
 	}
 

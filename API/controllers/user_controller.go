@@ -11,10 +11,10 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func RegisterStudent(c *gin.Context){
+func RegisterStudent(c *gin.Context) {
 	var stud models.User
-	if err := c.ShouldBindJSON(&stud); err != nil{
-		c.JSON(http.StatusOK, gin.H{"error":err.Error()})
+	if err := c.ShouldBindJSON(&stud); err != nil {
+		c.JSON(http.StatusOK, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -34,7 +34,6 @@ func RegisterStudent(c *gin.Context){
 
 	stud.Role = "student"
 
-
 	// Validate email and password
 	if !middleware.ValidateEmail(stud.Email) {
 		c.JSON(http.StatusOK, gin.H{"error": "Invalid email"})
@@ -48,13 +47,17 @@ func RegisterStudent(c *gin.Context){
 	// Generate OTP
 	otp := middleware.GenerateOTP(6)
 	storeOtp := models.OTP{
-		Otp:       otp,
-		Email:     stud.Email,
-		Username:  stud.Username,
-		StudentId: stud.StudentId,
-		ExpiresAt: time.Now().Add(time.Minute * 7),
-		Password:  stud.Password,
-		Role:      stud.Role,
+		Otp:        otp,
+		Email:      stud.Email,
+		Username:   stud.Username,
+		StudentId:  stud.StudentId,
+		ExpiresAt:  time.Now().Add(time.Minute * 7),
+		Password:   stud.Password,
+		Role:       stud.Role,
+		Sex:        stud.Sex,
+		Department: stud.Department,
+		EntryBatch: stud.EntryBatch,
+		ImgUrl:     stud.ImgURL,
 	}
 
 	// Store OTP in the database
@@ -72,13 +75,12 @@ func RegisterStudent(c *gin.Context){
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "OTP sent successfully"})
+}
 
-}	
-
-func RegisterAdmin(c *gin.Context){
+func RegisterAdmin(c *gin.Context) {
 	var admin models.User
-	if err := c.ShouldBindJSON(&admin); err != nil{
-		c.JSON(http.StatusOK, gin.H{"error":err.Error()})
+	if err := c.ShouldBindJSON(&admin); err != nil {
+		c.JSON(http.StatusOK, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -96,8 +98,7 @@ func RegisterAdmin(c *gin.Context){
 		return
 	}
 
-	admin.Role = "staff"
-
+	admin.Role = "admin"
 
 	// Validate email and password
 	if !middleware.ValidateEmail(admin.Email) {
@@ -112,13 +113,17 @@ func RegisterAdmin(c *gin.Context){
 	// Generate OTP
 	otp := middleware.GenerateOTP(6)
 	storeOtp := models.OTP{
-		Otp:       otp,
-		Email:     admin.Email,
-		Username:  admin.Username,
-		StudentId: admin.StudentId,
-		ExpiresAt: time.Now().Add(time.Minute * 7),
-		Password:  admin.Password,
-		Role:      admin.Role,
+		Otp:        otp,
+		Email:      admin.Email,
+		Username:   admin.Username,
+		StudentId:  admin.StudentId,
+		ExpiresAt:  time.Now().Add(time.Minute * 7),
+		Password:   admin.Password,
+		Role:       admin.Role,
+		Sex:        admin.Sex,
+		Department: admin.Department,
+		EntryBatch: admin.EntryBatch,
+		ImgUrl:     admin.ImgURL,
 	}
 
 	// Store OTP in the database
@@ -137,7 +142,6 @@ func RegisterAdmin(c *gin.Context){
 
 	c.JSON(http.StatusOK, gin.H{"message": "OTP sent successfully"})
 }
-
 
 func VerifyOTP(c *gin.Context) {
 	var otpRequest models.OTPRequest
@@ -171,23 +175,26 @@ func VerifyOTP(c *gin.Context) {
 
 	approval := false
 	if storeOtp.Role == "student" {
-		approval = true        // Students are auto-approved
+		approval = true // Students are auto-approved
 	}
-
 
 	// Get the user
 	user := models.User{
 		Username:     storeOtp.Username,
-		Email:    storeOtp.Email,
-		StudentId: storeOtp.StudentId,
-		Password: storeOtp.Password,
-		Role:     storeOtp.Role,
+		Email:        storeOtp.Email,
+		StudentId:    storeOtp.StudentId,
+		Password:     storeOtp.Password,
+		Role:         storeOtp.Role,
 		BorrowedBooks: []primitive.ObjectID{},
 		IsCheckedIn:  false,
 		Approved:     approval,
+		Sex:          storeOtp.Sex,
+		Department:   storeOtp.Department,
+		EntryBatch:   storeOtp.EntryBatch,
+		ImgURL:       storeOtp.ImgUrl,
 	}
 
-	newUser,err := data.RegisterUser(user)
+	newUser, err := data.RegisterUser(user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register user"})
 		return
